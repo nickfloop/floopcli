@@ -1,0 +1,8 @@
+**/*.egg-info 
+**/*.sh 
+**/__pycache__*
+build/ 
+dist/ 
+floopcli/ 
+floop_cli.egg-info/
+.mypy_cache/

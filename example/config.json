@@ -1,0 +1,12 @@
+{
+    "devices" : [
+        {
+            "address" : "1.2.3.4",
+            "name" : "device0"
+        },
+        {
+            "address" : "example-device.com:8080",
+            "name" : "device1"
+        }
+    ]
+}

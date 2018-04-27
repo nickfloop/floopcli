@@ -1,0 +1,7 @@
+version: '2'
+services:
+    floop:
+        build: .
+        volumes:
+        - ./:/floop
+        command: tail -F anything
