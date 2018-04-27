@@ -110,7 +110,7 @@ setup(
     # project page. What does your project relate to?
     #
     # Note that this is a string of words separated by whitespace, not a list.
-    keywords='iot sensor development',  # Optional
+    keywords='sensor development devops',  # Optional
 
     # You can just specify package directories manually here if your project is
     # simple. Or you can use find_packages().
@@ -175,7 +175,7 @@ setup(
     # executes the function `main` from this package when invoked:
     entry_points={  # Optional
         'console_scripts': [
-            'floop=floop:main',
+            'floop=floop.__main__:main',
         ],
     },
 

@@ -2,7 +2,10 @@
 **/*.sh 
 **/__pycache__*
 build/ 
-dist/ 
-floopcli/ 
+dist/
+floop-cli/
 floop_cli.egg-info/
 .mypy_cache/
+**/.*.swp
+sync_test/
+docs/build/
