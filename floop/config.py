@@ -3,7 +3,7 @@ from os.path import isdir
 from device.device import Device
 
 _FLOOP_CONFIG_EXPECTED_KEYS = ['devices', 'source_directory']
-_FLOOP_DEVICE_EXPECTED_KEYS = ['address', 'name']
+_FLOOP_DEVICE_EXPECTED_KEYS = ['address', 'name', 'ssh_key', 'user']
 
 class CannotSetImmutableAttributeException(Exception):
     pass
@@ -41,13 +41,20 @@ class FloopConfig(object):
     def parse(self):
         if not isdir(self.config['source_directory']):
             raise FloopSourceDirectoryDoesNotExist(
-                    self.config['source_directory'])
+                    self.config['source_directory']
+                  )
         source_directory = self.config['source_directory']
         devices = []
         for device in self.config['devices']:
             device_config = sorted(list(device.keys()))
-            if device_config != _FLOOP_DEVICE_EXPECTED_KEYS:
+            # extra keys will be ignored
+            if len(set(device_config).union(set(_FLOOP_DEVICE_EXPECTED_KEYS))) != \
+                    len(_FLOOP_DEVICE_EXPECTED_KEYS):
                 raise MalformedFloopDeviceConfigException(device_config)
-            device = Device(address=device['address'], name=device['name']) 
+            device = Device(
+                    address=device['address'],
+                    name=device['name'],
+                    ssh_key=device['ssh_key'],
+                    user=device['user']) 
             devices.append(device)
         return devices, source_directory

@@ -1,0 +1,17 @@
+box:
+    id: python:3.6
+build:
+    steps:
+        - pip-install
+        - script:
+            name: see env
+            code: |
+                env
+        - script:
+            name: pip3 install floop
+            code: |
+                sudo pip3 install -e .
+        - script:
+            name: python unit tests
+            code: |
+                pytest --cov=floop -v -s

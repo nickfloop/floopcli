@@ -28,6 +28,7 @@ class FloopCLI(object):
         if not hasattr(self, args.command):
             raise UnknownCommandException(args.command)
             exit(1)
+        # this runs the method matching the CLI argument
         getattr(self, args.command)()
 
     def __cprint(self, string, color=termcolor.DEFAULT):
@@ -64,6 +65,8 @@ class FloopCLI(object):
         parser = argparse.ArgumentParser(
                 description='Initialize single project communication between host and device(s)')
         print('Init...')
+        for device in self.devices:
+            device.create()
 
     def push(self):
         parser = argparse.ArgumentParser(
@@ -73,6 +76,6 @@ class FloopCLI(object):
             print(device.name)
             print(device.rsync(
                 source_directory=self.source_directory,
-                target_directory='~/.floop/',
+                target_directory='/.floop/',
                 recursive=True
             ))

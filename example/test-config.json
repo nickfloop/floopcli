@@ -2,12 +2,10 @@
     "source_directory" : "/home/nick/src/floop/floop/example/src",
     "devices" : [
         {
-            "address" : "192.168.99.103:2376",
-            "name" : "dm0"
-        },
-        {
-            "address" : "192.168.99.104:2376",
-            "name" : "dm1"
+            "address" : "192.168.1.122",
+            "name" : "op0",
+            "user" : "floop",
+            "ssh_key" : "~/.ssh/id_rsa"
         }
     ]
 }

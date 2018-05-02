@@ -9,3 +9,5 @@ floop_cli.egg-info/
 **/.*.swp
 sync_test/
 docs/build/
+.wercker/
+.pytest_cache/
