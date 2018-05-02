@@ -11,7 +11,7 @@ from shutil import rmtree
 def fixture_valid_device_config():
     return {'address' : '192.168.1.122',
             'name' : 'test0',
-            'ssh_key' : '~/.ssh/id_rsa',
+            'ssh_key' :  os.environ.get('$FLOOP_TEST_SSH_KEY') or '~/.ssh/id_rsa',
             'user' : 'floop'}
 
 @pytest.fixture(scope='module')
