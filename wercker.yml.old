@@ -1,0 +1,35 @@
+services:
+    - name: device0
+      id: forwardloop/floop-debian-jessie-ssh-sudo 
+    - name: device1
+      id: forwardloop/floop-debian-jessie-ssh-sudo 
+box:
+    id: python:3.6
+build:
+    steps:
+        - script:
+            name: install docker
+            code: |
+                sudo apt-get update
+                sudo apt-get install -y apt-transport-https ca-certificates curl gnupg2 lsb-release software-properties-common
+                curl -fsSL https://download.docker.com/linux/debian/gpg | sudo apt-key add -
+                sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/debian $(lsb_release -cs) stable"
+                sudo apt-get update
+                sudo apt-get install -y docker-ce
+        - script:
+            name: install docker-machine
+            code: |
+                 base=https://github.com/docker/machine/releases/download/v0.14.0 && curl -L $base/docker-machine-$(uname -s)-$(uname -m) >/tmp/docker-machine && sudo install /tmp/docker-machine /usr/local/bin/docker-machine
+        - pip-install
+        - script:
+            name: pip3 install floop
+            code: |
+                sudo pip3 install -e .
+        - script:
+            name: see env
+            code: |
+                env
+        - script:
+            name: python unit tests
+            code: |
+                pytest --cov=floop -v -s

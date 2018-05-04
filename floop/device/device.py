@@ -1,6 +1,6 @@
 from subprocess import check_output
 from os.path import isfile, expanduser
-from floop.util.pipeline import pipeline
+from floop.util.syscall import syscall
 
 class CannotSetImmutableAttributeException(Exception):
     pass
@@ -11,9 +11,15 @@ class CannotFindSSHKeyException(Exception):
 class DockerMachineCreateException(Exception):
     pass
 
+class CannotFindDockerMachineBinary(Exception):
+    pass
+
 class Device(object):
     def __init__(self, address: str, name: str, ssh_key: str, user: str) -> None:
-        self.docker_machine_bin = '/usr/local/bin/docker-machine'
+        docker_machine_bin = '/usr/local/bin/docker-machine'
+        self.docker_machine_bin = docker_machine_bin
+        if not isfile(docker_machine_bin):
+            raise CannotFindDockerMachineBinary(docker_machine_bin)
         self.address = address
         self.name = name
         self.ssh_key = ssh_key
@@ -73,25 +79,25 @@ class Device(object):
             self.user, 
             self.ssh_key, 
             self.name)
-        print(create_command)
-        out, err = pipeline(create_command)
+        out, err = syscall(create_command)
         if err is not None:
             raise DockerMachineCreateException(err)
 
     def run_ssh_command(self, command: str) -> None:
-        print(pipeline('{} ssh {} {}'.format(
+        print(syscall('{} ssh {} {}'.format(
             self.docker_machine_bin, self.name, command)
         ))
 
     def rsync(self,
             source_directory: str,
             target_directory: str) -> str:
-        return pipeline("rsync -avz -e '{} ssh' {} {}:'{}' --delete".format(
+        return syscall("rsync -avz -e '{} ssh' {} {}:'{}' --delete".format(
             self.docker_machine_bin, source_directory,
             self.name, target_directory
             )
         )[0].decode('utf-8')
 
     def clean(self):
+        # TODO: delete source directory and rsync to clean up all device code
         uninstall_docker_command = "{} ssh {} 'sudo apt-get purge -y docker-ce'".format(self.docker_machine_bin, self.name)
-        print(pipeline(uninstall_docker_command))
+        print(syscall(uninstall_docker_command))

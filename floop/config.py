@@ -1,9 +1,20 @@
 import json
-from os.path import isdir
+from time import time
+from os import rename
+from os.path import isdir, isfile
 from device.device import Device
 
-_FLOOP_CONFIG_EXPECTED_KEYS = ['devices', 'source_directory']
-_FLOOP_DEVICE_EXPECTED_KEYS = ['address', 'name', 'ssh_key', 'user']
+_FLOOP_CONFIG_DEFAULT_CONFIGURATION = {
+    'device_target_directory' : '/home/floop/.floop/',
+    'docker_machine_bin' : '/usr/local/bin/docker-machine',
+    'host_source_directory' : '',
+    'devices' : [{
+        'address' : '',
+        'name' : '',
+        'ssh_key' : '',
+        'user' : ''
+        },]
+}
 
 class CannotSetImmutableAttributeException(Exception):
     pass
@@ -17,13 +28,24 @@ class MalformedFloopDeviceConfigException(Exception):
 class FloopSourceDirectoryDoesNotExist(Exception):
     pass
 
+class FloopConfigFileNotFound(Exception):
+    pass 
+
 def read_json(json_file):
     with open(json_file) as j:
         return json.load(j)
 
 class FloopConfig(object):
-    def __init__(self, config_file='example/test-config.json'):
+    def __init__(self, config_file):
+        self.default_config = _FLOOP_CONFIG_DEFAULT_CONFIGURATION 
+        self.config_file = config_file
+    
+    def validate(self):
+        config_file = self.config_file
+        if not isfile(config_file):
+            raise FloopConfigFileNotFound(config_file)
         self.config = read_json(config_file)
+        return self
 
     @property
     def config(self):
@@ -34,27 +56,29 @@ class FloopConfig(object):
         if hasattr(self, 'config'):
             raise CannotSetImmutableAttributeException('config')
         config_keys = sorted(list(value.keys()))
-        if config_keys != _FLOOP_CONFIG_EXPECTED_KEYS:
+        # extra keys will be ignored
+        if len(set(config_keys).union(_FLOOP_CONFIG_DEFAULT_CONFIGURATION)) != \
+                len(_FLOOP_CONFIG_DEFAULT_CONFIGURATION):
             raise MalformedFloopConfigException(config_keys) 
+        for device in value['devices']:
+            if len(set(device.keys()).union(
+                _FLOOP_CONFIG_DEFAULT_CONFIGURATION['devices'][0].keys())) != \
+                    len(_FLOOP_CONFIG_DEFAULT_CONFIGURATION['devices'][0].keys()):
+                raise MalformedFloopConfigException(config_keys) 
         self.__config = value
 
     def parse(self):
-        if not isdir(self.config['source_directory']):
+        if not isdir(self.config['host_source_directory']):
             raise FloopSourceDirectoryDoesNotExist(
-                    self.config['source_directory']
+                    self.config['host_source_directory']
                   )
-        source_directory = self.config['source_directory']
+        source_directory = self.config['host_source_directory']
         devices = []
         for device in self.config['devices']:
-            device_config = sorted(list(device.keys()))
-            # extra keys will be ignored
-            if len(set(device_config).union(set(_FLOOP_DEVICE_EXPECTED_KEYS))) != \
-                    len(_FLOOP_DEVICE_EXPECTED_KEYS):
-                raise MalformedFloopDeviceConfigException(device_config)
-            device = Device(
-                    address=device['address'],
-                    name=device['name'],
-                    ssh_key=device['ssh_key'],
-                    user=device['user']) 
+            device = Device(**device)
+                    #address=device['address'],
+                    #name=device['name'],
+                    #ssh_key=device['ssh_key'],
+                    #user=device['user']) 
             devices.append(device)
         return devices, source_directory

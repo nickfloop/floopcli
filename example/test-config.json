@@ -1,5 +1,7 @@
 {
-    "source_directory" : "/home/nick/src/floop/floop/example/src",
+    "device_target_directory" : "/home/floop/.floop/",
+    "docker_machine_bin" : "/usr/local/bin/docker-machine",
+    "host_source_directory" : "/home/nick/src/floop/floop/example/src",
     "devices" : [
         {
             "address" : "192.168.1.122",
