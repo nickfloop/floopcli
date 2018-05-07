@@ -22,6 +22,10 @@ _DEVICE_TEST_SSH_PRIVATE_KEY_FILE = '{}/ssh.key'.format(
         _DEVICE_TEST_SSH_KEY_DIRECTORY)
 
 @pytest.fixture(scope='module')
+def fixture_docker_machine_bin():
+    return '/usr/local/bin/docker-machine'
+
+@pytest.fixture(scope='module')
 def valid_ssh_private_key(request):
     # this is a test key, don't worry
     # this key matches the test server at 
@@ -85,7 +89,7 @@ def fixture_valid_device_config():
 @pytest.fixture(scope='module')
 def fixture_valid_device(request):
     valid_config = fixture_valid_device_config()
-    device = Device(**valid_config)
+    device = Device(docker_machine_bin=fixture_docker_machine_bin(), **valid_config)
     device.create()
     def cleanup():
         # remove when done testing non-create/destroy methods
@@ -114,17 +118,17 @@ def fixture_rsync_src_directory(request):
     request.addfinalizer(cleanup)
     return src_dir
 
-def test_device_init(fixture_valid_device_config):
-    device = Device(**fixture_valid_device_config)
+def test_device_init(fixture_docker_machine_bin, fixture_valid_device_config):
+    device = Device(docker_machine_bin=fixture_docker_machine_bin,**fixture_valid_device_config)
 
-def test_device_init_nonexistent_ssh_key_fails(fixture_valid_device_config):
+def test_device_init_nonexistent_ssh_key_fails(fixture_docker_machine_bin, fixture_valid_device_config):
     config = fixture_valid_device_config
     config['ssh_key'] = '/definitely/not/a/valid/ssh/key'
     with pytest.raises(CannotFindSSHKeyException):
-        Device(**config)
+        Device(docker_machine_bin=fixture_docker_machine_bin,**fixture_valid_device_config)
 
-def test_device_set_attributes_after_init_fails(fixture_valid_device_config):
-    device = Device(**fixture_valid_device_config)
+def test_device_set_attributes_after_init_fails(fixture_docker_machine_bin, fixture_valid_device_config):
+    device = Device(docker_machine_bin=fixture_docker_machine_bin,**fixture_valid_device_config)
     for key in fixture_valid_device_config.keys():
         with pytest.raises(CannotSetImmutableAttributeException):
             setattr(device, key, fixture_valid_device_config[key])

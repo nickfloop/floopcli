@@ -6,6 +6,8 @@ from device.device import Device
 
 _FLOOP_CONFIG_DEFAULT_CONFIGURATION = {
     'device_target_directory' : '/home/floop/.floop/',
+    'docker_bin' : '/usr/local/bin/docker',
+    'docker_compose_bin' : '/usr/local/bin/docker-compose',
     'docker_machine_bin' : '/usr/local/bin/docker-machine',
     'host_source_directory' : '',
     'devices' : [{
@@ -57,11 +59,11 @@ class FloopConfig(object):
             raise CannotSetImmutableAttributeException('config')
         config_keys = sorted(list(value.keys()))
         # extra keys will be ignored
-        if len(set(config_keys).union(_FLOOP_CONFIG_DEFAULT_CONFIGURATION)) != \
-                len(_FLOOP_CONFIG_DEFAULT_CONFIGURATION):
+        if len(set(config_keys).intersection(_FLOOP_CONFIG_DEFAULT_CONFIGURATION.keys())) != \
+                len(_FLOOP_CONFIG_DEFAULT_CONFIGURATION.keys()):
             raise MalformedFloopConfigException(config_keys) 
         for device in value['devices']:
-            if len(set(device.keys()).union(
+            if len(set(device.keys()).intersection(
                 _FLOOP_CONFIG_DEFAULT_CONFIGURATION['devices'][0].keys())) != \
                     len(_FLOOP_CONFIG_DEFAULT_CONFIGURATION['devices'][0].keys()):
                 raise MalformedFloopConfigException(config_keys) 
@@ -73,12 +75,11 @@ class FloopConfig(object):
                     self.config['host_source_directory']
                   )
         source_directory = self.config['host_source_directory']
+        docker_machine_bin = self.config['host_source_directory']
         devices = []
         for device in self.config['devices']:
-            device = Device(**device)
-                    #address=device['address'],
-                    #name=device['name'],
-                    #ssh_key=device['ssh_key'],
-                    #user=device['user']) 
-            devices.append(device)
+            devices.append(
+                Device(
+                    docker_machine_bin=docker_machine_bin,
+                    **device))
         return devices, source_directory

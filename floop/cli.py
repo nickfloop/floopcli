@@ -1,12 +1,12 @@
 import argparse
 import json
 
-from sys import argv
+from sys import argv, exit
 from os.path import isfile, dirname, expanduser
 from os import makedirs, remove 
 from platform import system
 from util.termcolor import termcolor, cprint 
-from .config import FloopConfig, FloopConfigFileNotFound
+from .config import FloopConfig, FloopConfigFileNotFound, FloopSourceDirectoryDoesNotExist
 
 _FLOOP_CONFIG_DEFAULT_FILE = './floop.json'
 
@@ -26,12 +26,13 @@ class FloopCLI(object):
         config_file = _FLOOP_CONFIG_DEFAULT_FILE
         try:
             if len(argv) > 2:
-                args = parser.parse_args(argv[1:])
-                if args.config_file:
-                    command_index = 3 
-                    config_file = args.config_file
-                    self.devices, self.source_directory = FloopConfig(
-                            config_file=config_file).validate().parse()
+                if argv[1] != 'config':
+                    args = parser.parse_args(argv[1:])
+                    if args.config_file:
+                        command_index = 3 
+                        config_file = args.config_file
+                        self.devices, self.source_directory = FloopConfig(
+                                config_file=config_file).validate().parse()
             elif len(argv) > 1:
                 args = parser.parse_args(argv[1:])
                 if not args.command == 'config':
@@ -41,10 +42,17 @@ class FloopCLI(object):
             exit('Error| floop config file not found: {}\n\n\
 \tOptions to fix this error:\n\
 \t--------------------------\n\
-\tYou can copy an existing floop config file to the default path: {}\n\
-\tYou can generate a default config file by running: floop config\n\
-\tYou can use the -c flag to point to a non-default config file: floop -c your-config-file.json'.format(
+\tCopy an existing floop config file to the default path: {}\n\
+\tGenerate a default config file by running: floop config\n\
+\tUse the -c flag to point to a non-default config file: floop -c your-config-file.json'.format(
     config_file, _FLOOP_CONFIG_DEFAULT_FILE))
+        except FloopSourceDirectoryDoesNotExist:
+            exit('Error| Cannot find host_source_directory in config file: {}\n\n\
+\tOptions to fix this error:\n\
+\t--------------------------\n\
+\tUpdate host_source_directory in config file\n\
+\tMake sure you have permission to access the files in host_source_directory'.format(config_file))
+        self.config_file = config_file
         args = parser.parse_args(argv[command_index:command_index+1])
         if not hasattr(self, args.command):
             exit('Unknown floop command: {}'.format(args.command))
@@ -62,7 +70,7 @@ class FloopCLI(object):
         # TODO: back up old config file
         parser = argparse.ArgumentParser(
                 description='Configure CLI settings for all projects')
-        parser.add_argument('--overwrite',
+        parser.add_argument('-o', '--overwrite',
                 help='Overwrite configuration file with defaults',
                 action='store_true')
         args = parser.parse_args(argv[2:])
@@ -90,6 +98,9 @@ class FloopCLI(object):
         parser = argparse.ArgumentParser(
                 description='Initialize single project communication between host and device(s)')
         print('Init...')
+        if len(self.devices) < 1:
+            exit('No devices defined in configuration file: {}'.format(
+                self.config_file))
         for device in self.devices:
             device.create()
 

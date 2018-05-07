@@ -15,16 +15,18 @@ class CannotFindDockerMachineBinary(Exception):
     pass
 
 class Device(object):
-    def __init__(self, address: str, name: str, ssh_key: str, user: str) -> None:
-        docker_machine_bin = '/usr/local/bin/docker-machine'
+    def __init__(self,
+            address: str,
+            docker_machine_bin: str,
+            name: str,
+            ssh_key: str,
+            user: str) -> None:
         self.docker_machine_bin = docker_machine_bin
-        if not isfile(docker_machine_bin):
-            raise CannotFindDockerMachineBinary(docker_machine_bin)
         self.address = address
         self.name = name
         self.ssh_key = ssh_key
         self.user = user
-    
+
     @property
     def address(self) -> str:
         return self.__address
@@ -79,6 +81,7 @@ class Device(object):
             self.user, 
             self.ssh_key, 
             self.name)
+        print(create_command)
         out, err = syscall(create_command)
         if err is not None:
             raise DockerMachineCreateException(err)
