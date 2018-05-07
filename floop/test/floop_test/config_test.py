@@ -1,42 +1,10 @@
 import pytest
 
-import json
-
 from os import remove
 from os.path import abspath, dirname, isfile
 
 from floop.config import FloopConfig, FloopConfigFileNotFound, CannotSetImmutableAttributeException, MalformedFloopConfigException, FloopSourceDirectoryDoesNotExist
-
-_FLOOP_TEST_CONFIG_FILE = '{}/config.json'.format(dirname(
-    abspath(__file__))
-    )
-
-_FLOOP_TEST_CONFIG = {
-    'device_target_directory' : '/home/floop/.floop/',
-    'docker_bin' : '/usr/local/bin/docker',
-    'docker_compose_bin' : '/usr/local/bin/docker-compose',
-    'docker_machine_bin' : '/usr/local/bin/docker-machine',
-    'host_source_directory' : './',
-    'devices' : [{
-        'address' : '192.168.1.100',
-        'name' : 'floop_test_0',
-        'ssh_key' : '~/.ssh/id_rsa',
-        'user' : 'floop'
-        },]
-}
-
-@pytest.fixture(scope='function')
-def fixture_valid_config_file(request):
-    config_file = _FLOOP_TEST_CONFIG_FILE
-    config = _FLOOP_TEST_CONFIG
-    def cleanup():
-        if isfile(config_file):
-            remove(config_file)
-    cleanup()
-    with open(config_file, 'w') as cf:
-        json.dump(config, cf)
-    request.addfinalizer(cleanup)
-    return config_file
+from floop.test.floop_test.fixture import *
 
 def test_floop_config_init(fixture_valid_config_file):
     FloopConfig(fixture_valid_config_file)

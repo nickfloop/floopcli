@@ -5,10 +5,24 @@ from sys import argv, exit
 from os.path import isfile, dirname, expanduser
 from os import makedirs, remove 
 from platform import system
-from util.termcolor import termcolor, cprint 
+from floop.util.termcolor import termcolor, cprint 
 from .config import FloopConfig, FloopConfigFileNotFound, FloopSourceDirectoryDoesNotExist
 
 _FLOOP_CONFIG_DEFAULT_FILE = './floop.json'
+
+_FLOOP_USAGE_STRING = '''
+floop [-c custom-config.json] <command> [<args>]
+
+Supported commands:
+    config
+    init
+    ls
+    logs
+    push
+    build
+    run
+    clean
+'''
 
 class FloopCLI(object):
     '''
@@ -18,13 +32,18 @@ class FloopCLI(object):
         operating_system = system()
         if operating_system != 'Linux':
             exit('Unsupported operating system: {}'.format(operating_system))
-        parser = argparse.ArgumentParser(description='Floop CLI tool')
+        parser = argparse.ArgumentParser(description='Floop CLI tool',
+                usage=_FLOOP_USAGE_STRING)
         parser.add_argument('-c', '--config-file', 
                 help='Specify a non-default configuration file')
         parser.add_argument('command', help='Subcommand to run')
         command_index = 1 
         config_file = _FLOOP_CONFIG_DEFAULT_FILE
         try:
+            if len(argv) > 3:
+                args = parser.parse_args(argv[1:])
+                if argv[-1] == 'config' and args.config_file:
+                    exit('err')
             if len(argv) > 2:
                 if argv[1] != 'config':
                     args = parser.parse_args(argv[1:])
@@ -50,7 +69,8 @@ class FloopCLI(object):
             exit('Error| Cannot find host_source_directory in config file: {}\n\n\
 \tOptions to fix this error:\n\
 \t--------------------------\n\
-\tUpdate host_source_directory in config file\n\
+\tMake a new host_source_directory and define it in config file\n\
+\tChange host_source_directory in config file to a valid filepath\n\
 \tMake sure you have permission to access the files in host_source_directory'.format(config_file))
         self.config_file = config_file
         args = parser.parse_args(argv[command_index:command_index+1])
@@ -119,7 +139,7 @@ class FloopCLI(object):
                 description='Logs from initialized device(s)')
         print('logs...')
         logs_command = 'docker-compose logs'
-        for device in devices:
+        for device in self.devices:
             device.run_ssh_command(logs_command)
 
     def push(self):
@@ -141,7 +161,7 @@ class FloopCLI(object):
                 description='Build code on device(s)')
         print('build...')
         build_command = 'docker-compose build'
-        for device in devices:
+        for device in self.devices:
             device.run_ssh_command(build_command)
 
     def run(self):
@@ -150,7 +170,7 @@ class FloopCLI(object):
                 description='Run code on device(s)')
         print('run...')
         run_command = 'docker-compose up -d'
-        for device in devices:
+        for device in self.devices:
             device.run_ssh_command(run_command)
 
     def test(self):
@@ -159,7 +179,7 @@ class FloopCLI(object):
                 description='Test code on device(s)')
         print('test...')
         test_command = 'docker-compose -f {}/docker-compose.yml.test up -d'
-        for device in devices:
+        for device in self.devices:
             device.run_ssh_command(test_command)
 
     def clean(self):

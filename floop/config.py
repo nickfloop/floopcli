@@ -2,7 +2,7 @@ import json
 from time import time
 from os import rename
 from os.path import isdir, isfile
-from device.device import Device
+from floop.device.device import Device
 
 _FLOOP_CONFIG_DEFAULT_CONFIGURATION = {
     'device_target_directory' : '/home/floop/.floop/',
@@ -75,7 +75,7 @@ class FloopConfig(object):
                     self.config['host_source_directory']
                   )
         source_directory = self.config['host_source_directory']
-        docker_machine_bin = self.config['host_source_directory']
+        docker_machine_bin = self.config['docker_machine_bin']
         devices = []
         for device in self.config['devices']:
             devices.append(
