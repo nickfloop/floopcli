@@ -1,7 +1,7 @@
 import argparse
 import json
 
-from sys import argv, exit
+from sys import argv, exit, modules
 from shutil import copyfile
 from os.path import isfile, dirname, expanduser
 from os import makedirs, remove 
@@ -47,34 +47,31 @@ class FloopCLI(object):
                 help='Specify a non-default configuration file')
         parser.add_argument('command', help='Subcommand to run')
         # index of the command to be parsed below
-        command_index = 1 
         config_file = _FLOOP_CONFIG_DEFAULT_FILE
         try:
-            # handle floop -c file config
+            self.command_index = 2
             if len(argv) > 3:
-                args = parser.parse_args(argv[1:])
-                if argv[-1] == 'config' and args.config_file:
-                    raise IncompatibleCommandLineOptions('-c and config')
-                                # handle floop -c file command (not config)
-            if len(argv) > 2:
-                if argv[1] != 'config':
+                if argv[1] not in ['-c', '-config-file']:
+                    args = parser.parse_args(argv[1:2])
+                else:
                     args = parser.parse_args(argv[1:])
-                    if args.config_file:
-                        command_index = 3 
-                        config_file = args.config_file
-            if argv[1] != 'config':
-                args = parser.parse_args(argv[1:])
-                if not args.command == 'config':
-                    floop_config = FloopConfig(
-                            config_file=config_file).validate()
-                    self.config = floop_config.config
-                    self.devices, self.source_directory = floop_config.parse()
-            self.config_file = config_file
-            args = parser.parse_args(argv[command_index:command_index+1])
+                if 'config' in argv and args.config_file:
+                    raise IncompatibleCommandLineOptions('-c and config')
+                if args.config_file:
+                    config_file = args.config_file
+                    self.command_index = 4 
+            elif len(argv) > 1:
+                args = parser.parse_args(argv[1:2])
             if not hasattr(self, args.command):
                 exit('Unknown floop command: {}'.format(args.command))
+            if args.command != 'config':
+                floop_config = FloopConfig(
+                        config_file=config_file).validate()
+                self.config = floop_config.config
+                self.devices, self.source_directory = floop_config.parse()
             # this runs the method matching the CLI argument
             getattr(self, args.command)()
+        # all CLI stdout/stderr output should come from here
         except IncompatibleCommandLineOptions:
             exit('''Error| Incompatible commands and flags: -c and config\n\n\
 \tOptions to fix this error:\n\
@@ -158,16 +155,42 @@ class FloopCLI(object):
         # TODO: add --check flag to check ssh communication with a collection of enumerated commands
         parser = argparse.ArgumentParser(
                 description='Initialize single project communication between host and device(s)')
+        parser.add_argument('-i', '--install-dependencies',
+                help='Install floop dependencies',
+                action='store_true')
+        parser.add_argument('-s', '--sudo',
+                help='Use sudo while installing floop dependencies',
+                action='store_true')
+        parser.add_argument('-y', '--yes',
+                help='Answer yes to all prompts (for scripting)',
+                action='store_true')
+        args = parser.parse_args(argv[self.command_index:])
         print('Init...')
+        for key in self.config.keys():
+            if key.endswith('_bin'):
+                cli_command = key.replace('_bin','')
+                if not isfile(self.config[key]):
+                    if args.install_dependencies:
+                        if args.yes:
+                            install = 'Y'
+                        else:
+                            install_string = 'Install {}? (Y/n):'.format(
+                                    cli_command)
+                            install = input(install_string)
+                        if not install == 'Y':
+                            raise UnmetDependencyException(cli_command)
+                        # piece together class name from config keys
+                        dependency_class = ''
+                        for string in cli_command.split('_'):
+                            dependency_class += string.capitalize()
+                        # init and install a class object for each _bin key
+                        getattr(modules[__name__], dependency_class)().install(
+                                sudo=args.sudo, verify=True) 
+                    else:
+                        raise UnmetDependencyException(cli_command)
         if len(self.devices) < 1:
             exit('No devices defined in configuration file: {}'.format(
                 self.config_file))
-        if not isfile(self.config['docker_bin']):
-            self.__cprint('Docker binary not found: {}'.format(self.config['docker_bin']))
-            install_docker = input('Install docker? (Y/n)')
-            if not install_docker == 'Y':
-                raise UnmetDependencyException('docker')
-            Docker().install()
         for device in self.devices:
             device.create()
 

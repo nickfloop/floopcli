@@ -2,6 +2,8 @@ version: '2'
 services:
     floop:
         build: .
+        privileged: true
         volumes:
         - ./:/floop
+        - /var/run/docker.sock:/var/run/docker.sock 
         command: tail -F anything

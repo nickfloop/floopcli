@@ -77,12 +77,12 @@ def fixture_valid_device_config():
         ssh_key = _DEVICE_TEST_SSH_PRIVATE_KEY_FILE
     if os.environ.get('DEVICE0_PORT_22_TCP'):
         return {'address' : os.environ['DEVICE0_PORT_22_TCP_ADDR'],
-                'name' : 'test0',
+                'name' : 'floop0',
                 'ssh_key' :  ssh_key,
                 'user' : 'floop'
                 }
     return {'address' : '192.168.1.122',
-            'name' : 'op0',
+            'name' : 'floop0',
             'ssh_key' :  ssh_key, 
             'user' : 'floop'}
 

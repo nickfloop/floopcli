@@ -5,24 +5,11 @@ import json
 from os import remove
 from os.path import abspath, dirname, isfile
 
-FLOOP_TEST_CONFIG_FILE = './floop.json' 
-#'{}/floop.json'.format(dirname(
-#    abspath(__file__))
-#    )
+from floop.config import _FLOOP_CONFIG_DEFAULT_CONFIGURATION
 
-FLOOP_TEST_CONFIG = {
-    'device_target_directory' : '/home/floop/floop/',
-    'docker_bin' : '/usr/local/bin/docker',
-    'docker_compose_bin' : '/usr/local/bin/docker-compose',
-    'docker_machine_bin' : '/usr/local/bin/docker-machine',
-    'host_source_directory' : './example/src/',
-    'devices' : [{
-        'address' : '192.168.1.122',
-        'name' : 'op0',
-        'ssh_key' : '~/.ssh/id_rsa',
-        'user' : 'floop'
-        },]
-}
+FLOOP_TEST_CONFIG_FILE = './floop.json' 
+
+FLOOP_TEST_CONFIG = _FLOOP_CONFIG_DEFAULT_CONFIGURATION
 
 @pytest.fixture(scope='function')
 def fixture_valid_config_file(request):

@@ -36,8 +36,3 @@ def test_cli_commands_no_flags(fixture_cli_base, fixture_supported_cli_commands)
 
 def test_cli_config_overwrite():
     syscall('floop config --overwrite', check=True)
-
-def test_cli_config_overwrite_then_init_fails():
-    print(syscall('floop config --overwrite', check=True))
-    with pytest.raises(SystemCallException):
-        print(syscall('floop init', check=True))
