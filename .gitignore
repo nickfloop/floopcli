@@ -11,3 +11,6 @@ sync_test/
 docs/build/
 .wercker/
 .pytest_cache/
+**/*.backup*
+.coverage
+docker.key

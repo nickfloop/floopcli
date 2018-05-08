@@ -11,11 +11,11 @@ FLOOP_TEST_CONFIG_FILE = './floop.json'
 #    )
 
 FLOOP_TEST_CONFIG = {
-    'device_target_directory' : '/home/floop/.floop/',
+    'device_target_directory' : '/home/floop/floop/',
     'docker_bin' : '/usr/local/bin/docker',
     'docker_compose_bin' : '/usr/local/bin/docker-compose',
     'docker_machine_bin' : '/usr/local/bin/docker-machine',
-    'host_source_directory' : './',
+    'host_source_directory' : './example/src/',
     'devices' : [{
         'address' : '192.168.1.122',
         'name' : 'op0',
@@ -36,5 +36,3 @@ def fixture_valid_config_file(request):
         json.dump(config, cf)
     request.addfinalizer(cleanup)
     return config_file
-
-

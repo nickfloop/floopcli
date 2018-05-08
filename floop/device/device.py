@@ -1,5 +1,5 @@
 from subprocess import check_output
-from os.path import isfile, expanduser
+from os.path import isfile, isdir, expanduser
 from floop.util.syscall import syscall
 
 class CannotSetImmutableAttributeException(Exception):
@@ -12,6 +12,9 @@ class DockerMachineCreateException(Exception):
     pass
 
 class CannotFindDockerMachineBinary(Exception):
+    pass
+
+class SourceDirectoryNotfound(Exception):
     pass
 
 class Device(object):
@@ -86,19 +89,24 @@ class Device(object):
         if err is not None:
             raise DockerMachineCreateException(err)
 
-    def run_ssh_command(self, command: str) -> None:
+    def run_ssh_command(self, command: str, check: bool=False) -> None:
         print(syscall('{} ssh {} {}'.format(
             self.docker_machine_bin, self.name, command)
-        ))
+        , check))
 
     def rsync(self,
             source_directory: str,
-            target_directory: str) -> str:
-        return syscall("rsync -avz -e '{} ssh' {} {}:'{}' --delete".format(
+            target_directory: str,
+            check: bool=False) -> str:
+        if not isdir(source_directory):
+            raise SourceDirectoryNotfound(source_directory)
+        sys_string = "rsync -avz -e '{} ssh' {} {}:'{}' --delete".format(
             self.docker_machine_bin, source_directory,
             self.name, target_directory
             )
-        )[0].decode('utf-8')
+        print(sys_string)
+        out, err = syscall(sys_string, check=check)
+        return (out, err)
 
     def clean(self):
         # TODO: delete source directory and rsync to clean up all device code

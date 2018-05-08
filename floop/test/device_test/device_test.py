@@ -134,7 +134,7 @@ def test_device_set_attributes_after_init_fails(fixture_docker_machine_bin, fixt
             setattr(device, key, fixture_valid_device_config[key])
 
 def test_device_run_ssh_command_pwd(fixture_valid_device):
-    fixture_valid_device.run_ssh_command(command='pwd')
+    fixture_valid_device.run_ssh_command(command='pwd', check=True)
 
 def test_device_rsync(fixture_valid_device, fixture_rsync_src_directory):
     fixture_valid_device.rsync(

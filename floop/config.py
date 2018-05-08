@@ -2,19 +2,22 @@ import json
 from time import time
 from os import rename
 from os.path import isdir, isfile
+from shutil import which
 from floop.device.device import Device
 
+# TODO: use which or equivalent to populate automatically, fall back to defaults
 _FLOOP_CONFIG_DEFAULT_CONFIGURATION = {
-    'device_target_directory' : '/home/floop/.floop/',
-    'docker_bin' : '/usr/local/bin/docker',
-    'docker_compose_bin' : '/usr/local/bin/docker-compose',
-    'docker_machine_bin' : '/usr/local/bin/docker-machine',
-    'host_source_directory' : '',
+    'device_target_directory' : '/home/floop/floop/',
+    'rsync_bin' : which('rsync') or '/usr/bin/rsync',
+    'docker_bin' : which('docker') or '/usr/bin/docker',
+    'docker_compose_bin' : which('docker-compose') or '/usr/local/bin/docker-compose',
+    'docker_machine_bin' : which('docker-machine') or '/usr/local/bin/docker-machine',
+    'host_source_directory' : './src/',
     'devices' : [{
-        'address' : '',
-        'name' : '',
-        'ssh_key' : '',
-        'user' : ''
+        'address' : '192.168.1.100',
+        'name' : 'floop0',
+        'ssh_key' : '~/.ssh/id_rsa',
+        'user' : 'floop'
         },]
 }
 

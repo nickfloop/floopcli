@@ -16,7 +16,7 @@ def fixture_supported_cli_commands():
     return {
             #'config' : [],
             'init' : [],
-            #'push' : [],
+            'push' : [],
             #'build' : [],
             #'run' : [],
             #'clean' : []
