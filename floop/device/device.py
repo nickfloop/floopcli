@@ -1,6 +1,6 @@
 from subprocess import check_output
 from os.path import isfile, isdir, expanduser
-from floop.util.syscall import syscall
+from floop.util.syscall import syscall, SystemCallException
 
 class CannotSetImmutableAttributeException(Exception):
     pass
@@ -14,7 +14,13 @@ class DockerMachineCreateException(Exception):
 class CannotFindDockerMachineBinary(Exception):
     pass
 
-class SourceDirectoryNotfound(Exception):
+class DeviceSourceDirectoryDoesNotExist(Exception):
+    pass
+
+class DeviceBuildFileNotFound(Exception):
+    pass
+
+class DeviceTestFileNotFound(Exception):
     pass
 
 class Device(object):
@@ -26,7 +32,7 @@ class Device(object):
             user: str) -> None:
         self.docker_machine_bin = docker_machine_bin
         self.address = address
-        self.name = name
+        self.name = name.replace(' ','').replace('-','')
         self.ssh_key = ssh_key
         self.user = user
 
@@ -89,17 +95,42 @@ class Device(object):
         if err is not None:
             raise DockerMachineCreateException(err)
 
+    def build(self, source_directory, target_directory, check=True):
+        build_file = '{}/Dockerfile'.format(source_directory)
+        if not isfile(build_file):
+            raise DeviceBuildFileNotFound(build_file)
+        self.push(source_directory=source_directory, target_directory=target_directory)
+        meta_build_command = 'docker build -t floop {}/'.format(target_directory)
+        print(meta_build_command)
+        self.run_ssh_command(meta_build_command, check=check)
+
+    def test(self, source_directory, target_directory, check=True):
+        test_file = '{}/Dockerfile.test'.format(source_directory)
+        if not isfile(test_file):
+            raise DeviceTestFileNotFound(test_file)
+        self.push(source_directory=source_directory, target_directory=target_directory)
+        test_build_command = 'docker build -t flooptest -f {}/{} {}'.format(
+                target_directory, test_file.split('/')[-1], target_directory)
+        print(test_build_command)
+        self.run_ssh_command(test_build_command, check=check)
+        test_run_command = 'docker run --name flooptest -v {}:/floop/ flooptest'.format(
+                target_directory)
+        print(test_run_command)
+        self.run_ssh_command(test_run_command, check=check)
+
     def run_ssh_command(self, command: str, check: bool=False) -> None:
         print(syscall('{} ssh {} {}'.format(
             self.docker_machine_bin, self.name, command)
         , check))
 
-    def rsync(self,
+    def push(self,
             source_directory: str,
             target_directory: str,
             check: bool=False) -> str:
+        # prevents race condition where source exists at start of floop
+        # call but gets removed before rsync
         if not isdir(source_directory):
-            raise SourceDirectoryNotfound(source_directory)
+            raise DeviceSourceDirectoryDoesNotExist(source_directory)
         sys_string = "rsync -avz -e '{} ssh' {} {}:'{}' --delete".format(
             self.docker_machine_bin, source_directory,
             self.name, target_directory
@@ -108,7 +139,17 @@ class Device(object):
         out, err = syscall(sys_string, check=check)
         return (out, err)
 
-    def clean(self):
+    def destroy(self):
         # TODO: delete source directory and rsync to clean up all device code
         uninstall_docker_command = "{} ssh {} 'sudo apt-get purge -y docker-ce'".format(self.docker_machine_bin, self.name)
-        print(syscall(uninstall_docker_command))
+        print(syscall(uninstall_docker_command, check=True))
+
+    def run(self, target_directory):
+        rm_command = 'docker rm -f floop || true'
+        print(rm_command)
+        self.run_ssh_command(command=rm_command, check=True)
+        run_command = 'docker run --name floop -v {}:/floop/ floop'.format(
+                target_directory)
+        print(run_command)
+        self.run_ssh_command(command=run_command)
+

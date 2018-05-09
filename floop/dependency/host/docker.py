@@ -1,23 +1,13 @@
+from .host_dependency import HostDependency, InstallHostDependencyException
 from floop.util.syscall import syscall, SystemCallException
 from platform import system, dist
 from os.path import isfile
 from os import remove, listdir
 
-class UnsupportedOperatingSystem(Exception):
-    pass
-
-class InstallDockerException(Exception):
-    pass
-
 class VerifyDockerInstalledException(Exception):
     pass
 
-class Docker(object):
-    def __init__(self):
-        operating_system = system()
-        if operating_system != 'Linux':
-            raise UnsupportedOperatingSystem(operating_system)
-
+class Docker(HostDependency):
     def install(self, sudo=False, verify=False):
         self.sudo = sudo
         self.__install_apt_packages()
@@ -35,12 +25,14 @@ class Docker(object):
                 command = 'sudo {}'.format(command)
             print(command)
             try:
-                syscall(command, check=True)
+                syscall(command, check=True, verbose=True)
             except SystemCallException:
-                raise InstallDockerException(command)
+                raise InstallHostDependencyException(command)
 
     def __add_apt_repo(self):
         flavor, version, distro = dist()
+        print('dist()')
+        print(dist())
         flavor = flavor.lower()
         key_file = 'docker.key'
         download_key = 'curl -o {} -fsSL https://download.docker.com/linux/{}/gpg'.format(key_file, flavor)
@@ -54,7 +46,7 @@ class Docker(object):
                 print(command)
                 syscall(command, check=True)
         except SystemCallException:
-            raise InstallDockerException(command)
+            raise InstallHostDependencyException(command)
         finally:
             if isfile(key_file):
                 remove(key_file)
@@ -70,7 +62,7 @@ class Docker(object):
                 print(command)
                 syscall(command, check=True)
         except SystemCallException:
-            raise InstallDockerException(command)
+            raise InstallHostDependencyException(command)
 
     def __verify(self):
         check_version = 'docker --version'

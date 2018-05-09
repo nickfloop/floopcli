@@ -6,4 +6,5 @@ services:
         volumes:
         - ./:/floop
         - /var/run/docker.sock:/var/run/docker.sock 
+        - /home/nick/.docker/machine/machines/floop0/:/root/.docker/machine/machines/floop0/
         command: tail -F anything

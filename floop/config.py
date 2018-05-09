@@ -5,16 +5,17 @@ from os.path import isdir, isfile
 from shutil import which
 from floop.device.device import Device
 
-# TODO: use which or equivalent to populate automatically, fall back to defaults
 _FLOOP_CONFIG_DEFAULT_CONFIGURATION = {
     'device_target_directory' : '/home/floop/floop/',
-    'rsync_bin' : which('rsync') or '/usr/bin/rsync',
-    'docker_bin' : which('docker') or '/usr/bin/docker',
-    'docker_compose_bin' : which('docker-compose') or '/usr/local/bin/docker-compose',
-    'docker_machine_bin' : which('docker-machine') or '/usr/local/bin/docker-machine',
+    'host_rsync_bin' : which('rsync') or '/usr/bin/rsync',
+    'host_docker_bin' : which('docker') or '/usr/bin/docker',
+    # docker-compose binary should be compiled for ARM devices, so non-ARM
+    # hosts need to exclude it from their path
+    'target_docker_compose_bin' : './bin/docker-compose', 
+    'host_docker_machine_bin' : which('docker-machine') or '/usr/local/bin/docker-machine',
     'host_source_directory' : './src/',
     'devices' : [{
-        'address' : '192.168.1.100',
+        'address' : '192.168.1.122',
         'name' : 'floop0',
         'ssh_key' : '~/.ssh/id_rsa',
         'user' : 'floop'
@@ -34,6 +35,9 @@ class FloopSourceDirectoryDoesNotExist(Exception):
     pass
 
 class FloopConfigFileNotFound(Exception):
+    pass 
+
+class TargetBuildFileDoesNotExist(Exception):
     pass 
 
 def read_json(json_file):
@@ -78,11 +82,12 @@ class FloopConfig(object):
                     self.config['host_source_directory']
                   )
         source_directory = self.config['host_source_directory']
-        docker_machine_bin = self.config['docker_machine_bin']
+        target_directory = self.config['device_target_directory']
+        docker_machine_bin = self.config['host_docker_machine_bin']
         devices = []
         for device in self.config['devices']:
             devices.append(
                 Device(
                     docker_machine_bin=docker_machine_bin,
                     **device))
-        return devices, source_directory
+        return devices, source_directory, target_directory

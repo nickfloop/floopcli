@@ -7,6 +7,8 @@ box:
     id: forwardloop/floop-host-debian-jessie-python36-dockermachine 
 build:
     steps:
+        - install-packages:
+            packages: sudo
         - pip-install
         - script:
             name: pip3 install floop
@@ -19,4 +21,4 @@ build:
         - script:
             name: python unit tests
             code: |
-                pytest --cov=floop -v -s
+                pytest --cov-report term-missing --cov=floop -v -s -x

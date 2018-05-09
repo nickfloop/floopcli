@@ -3,6 +3,7 @@
 **/__pycache__*
 build/ 
 dist/
+bin/
 floop-cli/
 floop_cli.egg-info/
 .mypy_cache/
