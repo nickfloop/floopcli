@@ -32,11 +32,13 @@ def fixture_cli_base_nonexistent_config_file():
 def fixture_supported_cli_commands():
     return {
             #'config' : [],
-            #'init' : ['-i', '-s', '-y'],
-            'ls' : [],
+            'create' : [],
+            'ps' : [],
             'push' : [],
             'build' : [],
             'run' : [],
+            'logs' : [],
+            'test' : []
             #'clean' : []
             }
 
@@ -84,6 +86,11 @@ def fixture_nonexistent_source_dir_config(request):
     with open(config_file, 'w') as cf:
         json.dump(invalid_config, cf)
     return config_file 
+
+def test_cli_bases_fail(fixture_cli_base):
+    for base in fixture_cli_base:
+        with pytest.raises(SystemCallException):
+            syscall(base, check=True)
 
 def test_cli_commands_with_flags(fixture_cli_base, fixture_supported_cli_commands):
     for base in fixture_cli_base:

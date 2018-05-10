@@ -1,6 +1,14 @@
 floop package
 =============
 
+Subpackages
+-----------
+
+.. toctree::
+
+    floop.device
+    floop.util
+
 Submodules
 ----------
 

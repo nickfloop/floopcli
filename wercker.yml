@@ -8,7 +8,7 @@ box:
 build:
     steps:
         - install-packages:
-            packages: sudo
+            packages: sudo rsync
         - pip-install
         - script:
             name: pip3 install floop
@@ -21,4 +21,4 @@ build:
         - script:
             name: python unit tests
             code: |
-                pytest --cov-report term-missing --cov=floop -v -s -x
+                sudo pytest --cov-report term-missing --cov=floop -v -s -x

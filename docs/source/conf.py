@@ -14,8 +14,9 @@
 #
 import os
 import sys
+autodoc_default_flags = ['members', 'private-members']
+coverage_skip_undoc_in_source = True
 sys.path.insert(0, os.path.abspath('../floop'))
-
 
 # -- Project information -----------------------------------------------------
 

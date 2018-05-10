@@ -1,15 +1,18 @@
 import argparse
 import json
+import logging
 
 from sys import argv, exit, modules
 from shutil import copyfile
+from functools import partial
 from os.path import isfile, dirname, expanduser, abspath
 from os import makedirs, remove 
+from multiprocessing import Pool
 from platform import system
 from time import time
 from floop.util.termcolor import termcolor, cprint 
-from floop.device.device import DeviceSourceDirectoryDoesNotExist
-from .config import FloopConfig, FloopConfigFileNotFound, FloopSourceDirectoryDoesNotExist, MalformedFloopConfigException
+from floop.device.device import build, create, destroy, logs, ps, push, run, test, DeviceSourceDirectoryDoesNotExist
+from .config import Config, ConfigFileNotFound, SourceDirectoryDoesNotExist, MalformedConfigException, UnmetHostDependencyException
 
 _FLOOP_CONFIG_DEFAULT_FILE = './floop.json'
 
@@ -30,16 +33,23 @@ Supported commands:
 class IncompatibleCommandLineOptions(Exception):
     pass
 
-class UnmetHostDependencyException(Exception):
-    pass
-
-class UnmetTargetDependencyException(Exception):
-    pass
-
 class FloopCLI(object):
     #TODO: make all calls parallel and async
     '''
-    test
+    CLI entry point, handles all CLI calls
+
+    Parses all CLI commands then calls the appropriate
+    class method matching the CLI commands
+
+    attributes:
+        config (floop.config.Config):  
+            configuration used during CLI call
+        source_directory (str):
+            filepath of source code directory on host
+        target_directory (str):
+            filepath of source code directory on target (must be fullpath)
+        devices ([:py:class:`floop.device.device.Device`]):
+            list of devices defined in configuration file 
     '''
     def __init__(self):
         parser = argparse.ArgumentParser(description='Floop CLI tool',
@@ -72,7 +82,7 @@ class FloopCLI(object):
             if not hasattr(self, args.command):
                 exit('Unknown floop command: {}'.format(args.command))
             if args.command != 'config':
-                floop_config = FloopConfig(
+                floop_config = Config(
                         config_file=config_file).validate()
                 self.config = floop_config.config
                 self.devices, self.source_directory, self.target_directory = floop_config.parse()
@@ -88,7 +98,7 @@ class FloopCLI(object):
 \tCopy an existing floop config file to the default path: {}\n\
 \tOnly use one of the following: -c or config\n\
 '''.format(_FLOOP_CONFIG_DEFAULT_FILE))
-        except FloopConfigFileNotFound:
+        except ConfigFileNotFound:
             exit('Error| floop config file not found: {}\n\n\
 \tOptions to fix this error:\n\
 \t--------------------------\n\
@@ -96,14 +106,14 @@ class FloopCLI(object):
 \tGenerate a default config file by running: floop config\n\
 \tUse the -c flag to point to a non-default config file: floop -c your-config-file.json'.format(
     config_file, _FLOOP_CONFIG_DEFAULT_FILE))
-        except (FloopSourceDirectoryDoesNotExist, DeviceSourceDirectoryDoesNotExist):
+        except (SourceDirectoryDoesNotExist, DeviceSourceDirectoryDoesNotExist):
             exit('''Error| Cannot find host_source_directory in config file: {}\n\n\
 \tOptions to fix this error:\n\
 \t--------------------------\n\
 \tMake a new host_source_directory and define it in config file\n\
 \tChange host_source_directory in config file to a valid filepath\n\
 \tMake sure you have permission to access the files in host_source_directory'''.format(config_file))
-        except MalformedFloopConfigException:
+        except MalformedConfigException:
             exit('''Error| Config file is malformed: {}\n\n\
 \tOptions to fix this error:\n\
 \t--------------------------\n\
@@ -119,6 +129,15 @@ class FloopCLI(object):
 '''.format(str(e)))
         
     def __cprint(self, string, color=termcolor.DEFAULT):
+        '''
+        Wrapper for internal color print
+
+        args:
+            string: 
+                string to print
+            color:
+                terminal color name
+        '''
         cprint(
             string=string,
             color=color,
@@ -126,6 +145,9 @@ class FloopCLI(object):
             tag='floop')
 
     def config(self):
+        '''
+        Generate default configuration file
+        '''
         parser = argparse.ArgumentParser(
                 description='Configure CLI settings for all projects')
         parser.add_argument('-o', '--overwrite',
@@ -148,113 +170,71 @@ class FloopCLI(object):
         makedirs(dirname(_FLOOP_CONFIG_DEFAULT_FILE),
                 exist_ok=True)
         with open(_FLOOP_CONFIG_DEFAULT_FILE, 'w') as c:
-            json.dump(FloopConfig(_FLOOP_CONFIG_DEFAULT_FILE).default_config, c)
+            json.dump(Config(_FLOOP_CONFIG_DEFAULT_FILE).default_config, c)
         self.__cprint('Wrote default configuration to file: {}'.format(
             _FLOOP_CONFIG_DEFAULT_FILE
             )
         )
 
     def create(self):
-        # TODO: install docker-machine
-        # TODO: download docker-compose binary
         # TODO: add --check flag to check ssh communication with a collection of enumerated commands
         parser = argparse.ArgumentParser(
                 description='Initialize single project communication between host and device(s)')
-        #parser.add_argument('-i', '--install-dependencies',
-        #        help='Install floop dependencies',
-        #        action='store_true')
-        #parser.add_argument('-s', '--sudo',
-        #        help='Use sudo while installing floop dependencies',
-        #        action='store_true')
-        #parser.add_argument('-y', '--yes',
-        #        help='Answer yes to all prompts (for scripting)',
-        #        action='store_true')
-        #args = parser.parse_args(argv[self.command_index:])
-        #print('Init...')
-        #for key in self.config.keys():
-        #    if key.startswith('host_') and key.endswith('_bin'):
-        #        cli_command = key.replace(
-        #                '_bin', '').replace(
-        #                'host_', '').replace(
-        #                '_', '-')
-        #        if not isfile(self.config[key]):
-        #            if args.install_dependencies:
-        #                if args.yes:
-        #                    install = 'Y'
-        #                else:
-        #                    install_string = 'Install {}? (Y/n):'.format(
-        #                            cli_command)
-        #                    install = input(install_string)
-        #                if not install == 'Y':
-        #                    raise UnmetHostDependencyException(cli_command)
-        #                # piece together class name from config keys
-        #                dependency_class = ''
-        #                for string in cli_command.split('_'):
-        #                    dependency_class += string.capitalize()
-        #                # init and install a class object for each _bin key
-        #                try:
-        #                    instance = getattr(modules[__name__],
-        #                            dependency_class)()
-        #                    if isinstance(instance, HostDependency): 
-        #                        instance.install(
-        #                                sudo=args.sudo, verify=True) 
-        #                except InstallHostDependencyException as e:
-        #                    raise UnmetHostDependencyException(str(e))
-        #            else:
-        #                raise UnmetHostDependencyException(str(e))
-        #if len(self.devices) < 1:
-        #    exit('No devices defined in configuration file: {}'.format(
-        #        self.config_file))
-        for device in self.devices:
-            device.create()
+        with Pool() as pool:
+            pool.map(create, self.devices)
 
     def ps(self):
         # TODO: add metrics command to get resource usage info AND process info
         parser = argparse.ArgumentParser(
                 description='List all initiated device(s)')
         print('ps...')
-        ps_command = 'docker ps'
-        for device in self.devices:
-            device.run_ssh_command(ps_command)
+        with Pool() as pool:
+            pool.map(ps, self.devices)
      
     def logs(self):
         # TODO: add -f option (bonus if it's pipe-able)
         parser = argparse.ArgumentParser(
                 description='Logs from initialized device(s)')
         print('logs...')
-        logs_command = 'docker logs floop'
-        for device in self.devices:
-            device.run_ssh_command(logs_command)
+        with Pool() as pool:
+            pool.map(logs, self.devices)
 
     def push(self):
         # TODO: add .floopignore ?
         parser = argparse.ArgumentParser(
                 description='Push code from host to device(s)')
         print('push...')
-        for device in self.devices:
-            print(device.name)
-            print(device.push(
-                source_directory=self.source_directory,
-                target_directory=self.target_directory
-            ))
+        with Pool() as pool:
+            pool.map(
+                    partial(push,
+                        source_directory=self.source_directory,
+                        target_directory=self.target_directory),
+                    self.devices)
 
     def build(self):
         # TODO: add -v command to tee build outputs to logs AND local stdout
         parser = argparse.ArgumentParser(
                 description='Build code on device(s)')
         print('build...')
-        self.push()
-        for device in self.devices:
-            device.build(source_directory=self.source_directory, target_directory=self.target_directory)
+        #self.push()
+        with Pool() as pool:
+            pool.map(
+                    partial(build,
+                        source_directory=self.source_directory,
+                        target_directory=self.target_directory),
+                    self.devices)
 
     def run(self):
         # TODO: add -v command to tee build outputs to logs AND local stdout
         parser = argparse.ArgumentParser(
                 description='Run code on device(s)')
         print('run...')
-        self.build()
-        for device in self.devices:
-            device.run(target_directory=self.target_directory)
+        with Pool()as pool:
+            pool.map(
+                    partial(run,
+                        source_directory=self.source_directory,
+                        target_directory=self.target_directory),
+                    self.devices)
                 
     def test(self):
         # TODO: check that test YAML exists
@@ -262,12 +242,16 @@ class FloopCLI(object):
                 description='Test code on device(s)')
         print('test...')
         test_command = 'docker build'
-        for device in self.devices:
-            device.test(source_directory=self.source_directory, target_directory=self.target_directory)
+        with Pool()as pool:
+            pool.map(
+                    partial(test,
+                        source_directory=self.source_directory,
+                        target_directory=self.target_directory),
+                    self.devices)
 
     def destroy(self):
         parser = argparse.ArgumentParser(
                 description='Destroy project, code, and environment on device(s) but not host')
         print('clean...')
-        for device in self.devices:
-            device.destroy()
+        with Pool() as pool:
+            pool.map(destroy, self.devices)

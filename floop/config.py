@@ -2,17 +2,17 @@ import json
 from time import time
 from os import rename
 from os.path import isdir, isfile
+from pathlib import Path
 from shutil import which
 from floop.device.device import Device
 
 _FLOOP_CONFIG_DEFAULT_CONFIGURATION = {
     'device_target_directory' : '/home/floop/floop/',
-    'host_rsync_bin' : which('rsync') or '/usr/bin/rsync',
-    'host_docker_bin' : which('docker') or '/usr/bin/docker',
+    'host_rsync_bin' : which('rsync'),
+    'host_docker_bin' : which('docker'),
     # docker-compose binary should be compiled for ARM devices, so non-ARM
     # hosts need to exclude it from their path
-    'target_docker_compose_bin' : './bin/docker-compose', 
-    'host_docker_machine_bin' : which('docker-machine') or '/usr/local/bin/docker-machine',
+    'host_docker_machine_bin' : which('docker-machine'),
     'host_source_directory' : './src/',
     'devices' : [{
         'address' : '192.168.1.122',
@@ -25,26 +25,29 @@ _FLOOP_CONFIG_DEFAULT_CONFIGURATION = {
 class CannotSetImmutableAttributeException(Exception):
     pass
 
-class MalformedFloopConfigException(Exception):
+class MalformedConfigException(Exception):
     pass
 
-class MalformedFloopDeviceConfigException(Exception):
+class MalformedDeviceConfigException(Exception):
     pass
 
-class FloopSourceDirectoryDoesNotExist(Exception):
+class SourceDirectoryDoesNotExist(Exception):
     pass
 
-class FloopConfigFileNotFound(Exception):
+class ConfigFileNotFound(Exception):
     pass 
 
 class TargetBuildFileDoesNotExist(Exception):
     pass 
 
+class UnmetHostDependencyException(Exception):
+    pass
+
 def read_json(json_file):
     with open(json_file) as j:
         return json.load(j)
 
-class FloopConfig(object):
+class Config(object):
     def __init__(self, config_file):
         self.default_config = _FLOOP_CONFIG_DEFAULT_CONFIGURATION 
         self.config_file = config_file
@@ -52,8 +55,13 @@ class FloopConfig(object):
     def validate(self):
         config_file = self.config_file
         if not isfile(config_file):
-            raise FloopConfigFileNotFound(config_file)
+            raise ConfigFileNotFound(config_file)
         self.config = read_json(config_file)
+        for key, val in self.config.items():
+            if key.endswith('_bin'):
+                if val is None:
+                    dependency_name = key.replace('_bin', '')
+                    raise UnmetHostDependencyException(dependency_name)
         return self
 
     @property
@@ -68,17 +76,17 @@ class FloopConfig(object):
         # extra keys will be ignored
         if len(set(config_keys).intersection(_FLOOP_CONFIG_DEFAULT_CONFIGURATION.keys())) != \
                 len(_FLOOP_CONFIG_DEFAULT_CONFIGURATION.keys()):
-            raise MalformedFloopConfigException(config_keys) 
+            raise MalformedConfigException(config_keys) 
         for device in value['devices']:
             if len(set(device.keys()).intersection(
                 _FLOOP_CONFIG_DEFAULT_CONFIGURATION['devices'][0].keys())) != \
                     len(_FLOOP_CONFIG_DEFAULT_CONFIGURATION['devices'][0].keys()):
-                raise MalformedFloopConfigException(config_keys) 
+                raise MalformedConfigException(config_keys) 
         self.__config = value
 
     def parse(self):
         if not isdir(self.config['host_source_directory']):
-            raise FloopSourceDirectoryDoesNotExist(
+            raise SourceDirectoryDoesNotExist(
                     self.config['host_source_directory']
                   )
         source_directory = self.config['host_source_directory']

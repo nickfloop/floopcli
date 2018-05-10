@@ -1,5 +1,5 @@
 import pytest
-from floop.device.device import Device, CannotSetImmutableAttributeException, CannotFindSSHKeyException
+from floop.device.device import create, build, run, push, ps, logs, test, destroy, Device, CannotSetImmutableAttributeException, CannotFindSSHKeyException
 from floop.util.syscall import syscall
 
 import os
@@ -65,16 +65,14 @@ VGKOugFar0gIf3RyOAG3K0LoKBJR1rkqoE7I07BaQlXoDiMKbVQ=
     with open(key_file, 'w') as kf:
         kf.write(key)
     def cleanup():
-        if isdir(key_dir):
+        if os.path.isdir(key_dir):
             rmtree(key_dir)
     request.addfinalizer(cleanup)
     return key_file
 
 @pytest.fixture(scope='function')
-def fixture_valid_device_config():
-    ssh_key = '~/.ssh/id_rsa'
-    if os.path.isfile(_DEVICE_TEST_SSH_PRIVATE_KEY_FILE):
-        ssh_key = _DEVICE_TEST_SSH_PRIVATE_KEY_FILE
+def fixture_valid_device_config(request):
+    ssh_key = valid_ssh_private_key(request)
     if os.environ.get('DEVICE0_PORT_22_TCP'):
         return {'address' : os.environ['DEVICE0_PORT_22_TCP_ADDR'],
                 'name' : 'floop0',
@@ -88,9 +86,9 @@ def fixture_valid_device_config():
 
 @pytest.fixture(scope='module')
 def fixture_valid_device(request):
-    valid_config = fixture_valid_device_config()
+    valid_config = fixture_valid_device_config(request)
     device = Device(docker_machine_bin=fixture_docker_machine_bin(), **valid_config)
-    device.create()
+    create(device)
     def cleanup():
         # remove when done testing non-create/destroy methods
         pass
@@ -104,7 +102,7 @@ def fixture_valid_device(request):
     return device
 
 @pytest.fixture(scope='function')
-def fixture_rsync_src_directory(request):
+def fixture_push_src_directory(request):
     src_dir = _DEVICE_TEST_SRC_DIRECTORY 
     if os.path.isdir(src_dir):
         rmtree(src_dir)
@@ -136,14 +134,13 @@ def test_device_set_attributes_after_init_fails(fixture_docker_machine_bin, fixt
 def test_device_run_ssh_command_pwd(fixture_valid_device):
     fixture_valid_device.run_ssh_command(command='pwd', check=True)
 
-def test_device_rsync(fixture_valid_device, fixture_rsync_src_directory):
-    fixture_valid_device.rsync(
-        source_directory=fixture_rsync_src_directory,
+def test_device_push(fixture_valid_device, fixture_push_src_directory):
+    push(fixture_valid_device,
+        source_directory=fixture_push_src_directory,
         target_directory='/home/floop/.floop'
     )
-    #rmtree(fixture_rsync_src_directory)
-    fixture_valid_device.rsync(
-        source_directory=fixture_rsync_src_directory,
+    push(fixture_valid_device,
+        source_directory=fixture_push_src_directory,
         target_directory='/home/floop/.floop'
     )
     fixture_valid_device.run_ssh_command(command='ls')
