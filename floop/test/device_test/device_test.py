@@ -1,11 +1,12 @@
 import pytest
-from floop.device.device import create, build, run, push, ps, logs, test, destroy, Device, CannotSetImmutableAttributeException, CannotFindSSHKeyException
+from floop.device.device import create, build, run, push, ps, logs, test, destroy, Device, DeviceCreateException, CannotSetImmutableAttribute, SSHKeyNotFound
 from floop.util.syscall import syscall
 
 import os
 import os.path
 import json
 from shutil import rmtree
+from copy import copy
 
 _DEVICE_TEST_SRC_DIRECTORY = '{}/src/'.format(os.path.dirname(
     os.path.abspath(__file__))
@@ -71,24 +72,37 @@ VGKOugFar0gIf3RyOAG3K0LoKBJR1rkqoE7I07BaQlXoDiMKbVQ=
     return key_file
 
 @pytest.fixture(scope='function')
-def fixture_valid_device_config(request):
-    ssh_key = valid_ssh_private_key(request)
-    if os.environ.get('DEVICE0_PORT_22_TCP'):
-        return {'address' : os.environ['DEVICE0_PORT_22_TCP_ADDR'],
-                'name' : 'floop0',
-                'ssh_key' :  ssh_key,
-                'user' : 'floop'
-                }
+def fixture_valid_device_config():
     return {'address' : '192.168.1.122',
             'name' : 'floop0',
-            'ssh_key' :  ssh_key, 
+            'ssh_key' :  '~/.ssh/id_rsa', 
             'user' : 'floop'}
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope='function')
+def fixture_invalid_device_configs():
+    config = fixture_valid_device_config()
+    rm_machine = '{} rm -f {}'.format(
+            fixture_docker_machine_bin(),
+            config['name'])
+    syscall(rm_machine, check=False)
+    invalid_items = {'address' : '192.168.1.1222222',
+            'user' : 'definitelyanunauthorizeduser'}
+    configs = []
+    for key, val in invalid_items.items():
+        invalid_config = copy(config)
+        invalid_config[key] = val
+        configs.append(invalid_config)
+    return configs 
+
+@pytest.fixture(scope='function')
 def fixture_valid_device(request):
-    valid_config = fixture_valid_device_config(request)
+    valid_config = fixture_valid_device_config()
+    rm_machine = '{} rm -f {}'.format(
+            fixture_docker_machine_bin(),
+            valid_config['name'])
+    syscall(rm_machine, check=False)
     device = Device(docker_machine_bin=fixture_docker_machine_bin(), **valid_config)
-    create(device)
+    create(device, check=True)
     def cleanup():
         # remove when done testing non-create/destroy methods
         pass
@@ -119,16 +133,25 @@ def fixture_push_src_directory(request):
 def test_device_init(fixture_docker_machine_bin, fixture_valid_device_config):
     device = Device(docker_machine_bin=fixture_docker_machine_bin,**fixture_valid_device_config)
 
+def test_device_create_invalid_config_fails(fixture_docker_machine_bin,
+        fixture_invalid_device_configs):
+    for config in fixture_invalid_device_configs:
+        device = Device(
+                docker_machine_bin=fixture_docker_machine_bin,
+                **config)
+        with pytest.raises(DeviceCreateException):
+            create(device)
+
 def test_device_init_nonexistent_ssh_key_fails(fixture_docker_machine_bin, fixture_valid_device_config):
     config = fixture_valid_device_config
     config['ssh_key'] = '/definitely/not/a/valid/ssh/key'
-    with pytest.raises(CannotFindSSHKeyException):
+    with pytest.raises(SSHKeyNotFound):
         Device(docker_machine_bin=fixture_docker_machine_bin,**fixture_valid_device_config)
 
 def test_device_set_attributes_after_init_fails(fixture_docker_machine_bin, fixture_valid_device_config):
     device = Device(docker_machine_bin=fixture_docker_machine_bin,**fixture_valid_device_config)
     for key in fixture_valid_device_config.keys():
-        with pytest.raises(CannotSetImmutableAttributeException):
+        with pytest.raises(CannotSetImmutableAttribute):
             setattr(device, key, fixture_valid_device_config[key])
 
 def test_device_run_ssh_command_pwd(fixture_valid_device):

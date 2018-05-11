@@ -159,3 +159,667 @@ Successfully tagged floop:latest
 2018-05-10 21:38:10,403 INFO floop0 - run: docker run --name floop -v /home/floop/floop/:/floop/ floop
 2018-05-10 21:38:18,800 INFO floop0 - run: Hello, World!!!
 
+2018-05-11 13:10:53,898 INFO floop0 - push: rsync -avz -e '/usr/local/bin/docker-machine ssh' ./src/ floop0:'/home/floop/floop/' --delete
+2018-05-11 13:10:57,709 INFO floop0 - push: sending incremental file list
+
+sent 128 bytes  received 12 bytes  31.11 bytes/sec
+total size is 445  speedup is 3.18
+
+2018-05-11 13:10:57,710 INFO floop0 - build: docker build -t floop /home/floop/floop//
+2018-05-11 13:11:01,006 INFO floop0 - build: Sending build context to Docker daemon  4.096kB
+Step 1/6 : FROM library/python
+ ---> 98281429ea18
+Step 2/6 : RUN apt-get update && apt-get install curl
+ ---> Using cache
+ ---> 82123c20cfc2
+Step 3/6 : RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
+ ---> Using cache
+ ---> c13c58e3a02f
+Step 4/6 : RUN python get-pip.py
+ ---> Using cache
+ ---> c33b64fcc5d8
+Step 5/6 : RUN pip install docker-compose
+ ---> Using cache
+ ---> 9b18b90650a9
+Step 6/6 : CMD ["python", "/floop/hello.py"]
+ ---> Using cache
+ ---> 5665e623a9f5
+Successfully built 5665e623a9f5
+Successfully tagged floop:latest
+
+2018-05-11 13:11:01,007 INFO floop0 - run: docker rm -f floop || true
+2018-05-11 13:11:04,231 INFO floop0 - run: floop
+
+2018-05-11 13:11:04,232 INFO floop0 - run: docker run --name floop -v /home/floop/floop/:/floop/ floop
+2018-05-11 13:11:12,730 INFO floop0 - run: Hello, World!!!
+
+2018-05-11 13:11:13,176 INFO floop0 - push: rsync -avz -e '/usr/local/bin/docker-machine ssh' ./src/ floop0:'/home/floop/floop/' --delete
+2018-05-11 13:11:15,345 INFO floop0 - push: sending incremental file list
+
+sent 128 bytes  received 12 bytes  56.00 bytes/sec
+total size is 445  speedup is 3.18
+
+2018-05-11 13:11:15,807 INFO floop0 - push: rsync -avz -e '/usr/local/bin/docker-machine ssh' ./src/ floop0:'/home/floop/floop/' --delete
+2018-05-11 13:11:19,264 INFO floop0 - push: sending incremental file list
+
+sent 128 bytes  received 12 bytes  31.11 bytes/sec
+total size is 445  speedup is 3.18
+
+2018-05-11 13:11:19,265 INFO floop0 - build: docker build -t floop /home/floop/floop//
+2018-05-11 13:11:22,751 INFO floop0 - build: Sending build context to Docker daemon  4.096kB
+Step 1/6 : FROM library/python
+ ---> 98281429ea18
+Step 2/6 : RUN apt-get update && apt-get install curl
+ ---> Using cache
+ ---> 82123c20cfc2
+Step 3/6 : RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
+ ---> Using cache
+ ---> c13c58e3a02f
+Step 4/6 : RUN python get-pip.py
+ ---> Using cache
+ ---> c33b64fcc5d8
+Step 5/6 : RUN pip install docker-compose
+ ---> Using cache
+ ---> 9b18b90650a9
+Step 6/6 : CMD ["python", "/floop/hello.py"]
+ ---> Using cache
+ ---> 5665e623a9f5
+Successfully built 5665e623a9f5
+Successfully tagged floop:latest
+
+2018-05-11 13:11:23,261 INFO floop0 - push: rsync -avz -e '/usr/local/bin/docker-machine ssh' ./src/ floop0:'/home/floop/floop/' --delete
+2018-05-11 13:11:25,984 INFO floop0 - push: sending incremental file list
+
+sent 128 bytes  received 12 bytes  56.00 bytes/sec
+total size is 445  speedup is 3.18
+
+2018-05-11 13:11:25,985 INFO floop0 - test: docker rm -f flooptest || true
+2018-05-11 13:11:31,157 INFO floop0 - test: flooptest
+
+2018-05-11 13:11:31,157 INFO floop0 - test: docker build -t flooptest -f /home/floop/floop//Dockerfile.test /home/floop/floop/
+2018-05-11 13:11:34,639 INFO floop0 - test: Sending build context to Docker daemon  4.096kB
+Step 1/6 : FROM library/python
+ ---> 98281429ea18
+Step 2/6 : RUN apt-get update && apt-get install curl
+ ---> Using cache
+ ---> 82123c20cfc2
+Step 3/6 : RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
+ ---> Using cache
+ ---> c13c58e3a02f
+Step 4/6 : RUN python get-pip.py
+ ---> Using cache
+ ---> c33b64fcc5d8
+Step 5/6 : RUN pip install docker-compose
+ ---> Using cache
+ ---> 9b18b90650a9
+Step 6/6 : CMD ["python", "/floop/hello.py"]
+ ---> Using cache
+ ---> 5665e623a9f5
+Successfully built 5665e623a9f5
+Successfully tagged flooptest:latest
+
+2018-05-11 13:11:34,640 INFO floop0 - test: docker run --name flooptest -v /home/floop/floop/:/floop/ flooptest
+2018-05-11 13:11:42,070 INFO floop0 - test: Hello, World!!!
+
+2018-05-11 13:11:42,539 INFO floop0 - ps: docker ps
+2018-05-11 13:11:46,015 INFO floop0 - ps: CONTAINER ID        IMAGE               COMMAND             CREATED             STATUS              PORTS               NAMES
+
+2018-05-11 13:11:50,178 INFO floop0 - create: /usr/local/bin/docker-machine create --driver generic --generic-ip-address 192.168.1.122 --generic-ssh-user floop --generic-ssh-key /home/nick/.ssh/id_rsa --engine-storage-driver overlay floop0
+2018-05-11 13:11:50,213 INFO floop0 - create: 
+2018-05-11 13:11:50,214 INFO floop0 - create: Checking with pwd
+2018-05-11 13:11:52,764 INFO floop0 - create: /home/floop
+
+2018-05-11 13:11:53,206 INFO floop0 - push: rsync -avz -e '/usr/local/bin/docker-machine ssh' ./src/ floop0:'/home/floop/floop/' --delete
+2018-05-11 13:11:55,968 INFO floop0 - push: sending incremental file list
+
+sent 128 bytes  received 12 bytes  56.00 bytes/sec
+total size is 445  speedup is 3.18
+
+2018-05-11 13:11:55,969 INFO floop0 - build: docker build -t floop /home/floop/floop//
+2018-05-11 13:12:01,406 INFO floop0 - build: Sending build context to Docker daemon  4.096kB
+Step 1/6 : FROM library/python
+ ---> 98281429ea18
+Step 2/6 : RUN apt-get update && apt-get install curl
+ ---> Using cache
+ ---> 82123c20cfc2
+Step 3/6 : RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
+ ---> Using cache
+ ---> c13c58e3a02f
+Step 4/6 : RUN python get-pip.py
+ ---> Using cache
+ ---> c33b64fcc5d8
+Step 5/6 : RUN pip install docker-compose
+ ---> Using cache
+ ---> 9b18b90650a9
+Step 6/6 : CMD ["python", "/floop/hello.py"]
+ ---> Using cache
+ ---> 5665e623a9f5
+Successfully built 5665e623a9f5
+Successfully tagged floop:latest
+
+2018-05-11 13:12:01,407 INFO floop0 - run: docker rm -f floop || true
+2018-05-11 13:12:04,479 INFO floop0 - run: floop
+
+2018-05-11 13:12:04,480 INFO floop0 - run: docker run --name floop -v /home/floop/floop/:/floop/ floop
+2018-05-11 13:12:13,048 INFO floop0 - run: Hello, World!!!
+
+2018-05-11 13:12:13,531 INFO floop0 - push: rsync -avz -e '/usr/local/bin/docker-machine ssh' ./src/ floop0:'/home/floop/floop/' --delete
+2018-05-11 13:12:15,351 INFO floop0 - push: sending incremental file list
+
+sent 128 bytes  received 12 bytes  56.00 bytes/sec
+total size is 445  speedup is 3.18
+
+2018-05-11 13:12:15,874 INFO floop0 - push: rsync -avz -e '/usr/local/bin/docker-machine ssh' ./src/ floop0:'/home/floop/floop/' --delete
+2018-05-11 13:12:18,845 INFO floop0 - push: sending incremental file list
+
+sent 128 bytes  received 12 bytes  40.00 bytes/sec
+total size is 445  speedup is 3.18
+
+2018-05-11 13:12:18,847 INFO floop0 - build: docker build -t floop /home/floop/floop//
+2018-05-11 13:12:21,760 INFO floop0 - build: Sending build context to Docker daemon  4.096kB
+Step 1/6 : FROM library/python
+ ---> 98281429ea18
+Step 2/6 : RUN apt-get update && apt-get install curl
+ ---> Using cache
+ ---> 82123c20cfc2
+Step 3/6 : RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
+ ---> Using cache
+ ---> c13c58e3a02f
+Step 4/6 : RUN python get-pip.py
+ ---> Using cache
+ ---> c33b64fcc5d8
+Step 5/6 : RUN pip install docker-compose
+ ---> Using cache
+ ---> 9b18b90650a9
+Step 6/6 : CMD ["python", "/floop/hello.py"]
+ ---> Using cache
+ ---> 5665e623a9f5
+Successfully built 5665e623a9f5
+Successfully tagged floop:latest
+
+2018-05-11 13:12:22,248 INFO floop0 - push: rsync -avz -e '/usr/local/bin/docker-machine ssh' ./src/ floop0:'/home/floop/floop/' --delete
+2018-05-11 13:12:25,389 INFO floop0 - push: sending incremental file list
+
+sent 128 bytes  received 12 bytes  40.00 bytes/sec
+total size is 445  speedup is 3.18
+
+2018-05-11 13:12:25,389 INFO floop0 - test: docker rm -f flooptest || true
+2018-05-11 13:12:31,208 INFO floop0 - test: flooptest
+
+2018-05-11 13:12:31,209 INFO floop0 - test: docker build -t flooptest -f /home/floop/floop//Dockerfile.test /home/floop/floop/
+2018-05-11 13:12:35,017 INFO floop0 - test: Sending build context to Docker daemon  4.096kB
+Step 1/6 : FROM library/python
+ ---> 98281429ea18
+Step 2/6 : RUN apt-get update && apt-get install curl
+ ---> Using cache
+ ---> 82123c20cfc2
+Step 3/6 : RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
+ ---> Using cache
+ ---> c13c58e3a02f
+Step 4/6 : RUN python get-pip.py
+ ---> Using cache
+ ---> c33b64fcc5d8
+Step 5/6 : RUN pip install docker-compose
+ ---> Using cache
+ ---> 9b18b90650a9
+Step 6/6 : CMD ["python", "/floop/hello.py"]
+ ---> Using cache
+ ---> 5665e623a9f5
+Successfully built 5665e623a9f5
+Successfully tagged flooptest:latest
+
+2018-05-11 13:12:35,018 INFO floop0 - test: docker run --name flooptest -v /home/floop/floop/:/floop/ flooptest
+2018-05-11 13:12:41,304 INFO floop0 - test: Hello, World!!!
+
+2018-05-11 13:12:41,897 INFO floop0 - ps: docker ps
+2018-05-11 13:12:45,560 INFO floop0 - ps: CONTAINER ID        IMAGE               COMMAND             CREATED             STATUS              PORTS               NAMES
+
+2018-05-11 13:12:50,358 INFO floop0 - create: /usr/local/bin/docker-machine create --driver generic --generic-ip-address 192.168.1.122 --generic-ssh-user floop --generic-ssh-key /home/nick/.ssh/id_rsa --engine-storage-driver overlay floop0
+2018-05-11 13:12:50,389 INFO floop0 - create: 
+2018-05-11 13:12:50,389 INFO floop0 - create: Checking with pwd
+2018-05-11 13:12:53,118 INFO floop0 - create: /home/floop
+
+2018-05-11 13:21:21,840 INFO floop0 - push: rsync -avz -e '/usr/local/bin/docker-machine ssh' ./src/ floop0:'/home/floop/floop/' --delete
+2018-05-11 13:21:26,298 INFO floop0 - push: sending incremental file list
+
+sent 128 bytes  received 12 bytes  25.45 bytes/sec
+total size is 445  speedup is 3.18
+
+2018-05-11 13:21:26,299 INFO floop0 - build: docker build -t floop /home/floop/floop//
+2018-05-11 13:21:31,953 INFO floop0 - build: Sending build context to Docker daemon  4.096kB
+Step 1/6 : FROM library/python
+ ---> 98281429ea18
+Step 2/6 : RUN apt-get update && apt-get install curl
+ ---> Using cache
+ ---> 82123c20cfc2
+Step 3/6 : RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
+ ---> Using cache
+ ---> c13c58e3a02f
+Step 4/6 : RUN python get-pip.py
+ ---> Using cache
+ ---> c33b64fcc5d8
+Step 5/6 : RUN pip install docker-compose
+ ---> Using cache
+ ---> 9b18b90650a9
+Step 6/6 : CMD ["python", "/floop/hello.py"]
+ ---> Using cache
+ ---> 5665e623a9f5
+Successfully built 5665e623a9f5
+Successfully tagged floop:latest
+
+2018-05-11 13:21:31,954 INFO floop0 - run: docker rm -f floop || true
+2018-05-11 13:21:35,401 INFO floop0 - run: floop
+
+2018-05-11 13:21:35,401 INFO floop0 - run: docker run --name floop -v /home/floop/floop/:/floop/ floop
+2018-05-11 13:21:42,667 INFO floop0 - run: Hello, World!!!
+
+2018-05-11 13:21:43,120 INFO floop0 - create: /usr/local/bin/docker-machine create --driver generic --generic-ip-address 192.168.1.122 --generic-ssh-user floop --generic-ssh-key /home/nick/.ssh/id_rsa --engine-storage-driver overlay floop0
+2018-05-11 13:21:43,154 INFO floop0 - create: 
+2018-05-11 13:21:43,155 INFO floop0 - create: Checking with pwd
+2018-05-11 13:21:45,180 INFO floop0 - create: /home/floop
+
+2018-05-11 13:21:45,658 INFO floop0 - push: rsync -avz -e '/usr/local/bin/docker-machine ssh' ./src/ floop0:'/home/floop/floop/' --delete
+2018-05-11 13:21:48,053 INFO floop0 - push: sending incremental file list
+
+sent 128 bytes  received 12 bytes  40.00 bytes/sec
+total size is 445  speedup is 3.18
+
+2018-05-11 13:21:48,054 INFO floop0 - test: docker rm -f flooptest || true
+2018-05-11 13:21:51,537 INFO floop0 - test: flooptest
+
+2018-05-11 13:21:51,538 INFO floop0 - test: docker build -t flooptest -f /home/floop/floop//Dockerfile.test /home/floop/floop/
+2018-05-11 13:21:55,013 INFO floop0 - test: Sending build context to Docker daemon  4.096kB
+Step 1/6 : FROM library/python
+ ---> 98281429ea18
+Step 2/6 : RUN apt-get update && apt-get install curl
+ ---> Using cache
+ ---> 82123c20cfc2
+Step 3/6 : RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
+ ---> Using cache
+ ---> c13c58e3a02f
+Step 4/6 : RUN python get-pip.py
+ ---> Using cache
+ ---> c33b64fcc5d8
+Step 5/6 : RUN pip install docker-compose
+ ---> Using cache
+ ---> 9b18b90650a9
+Step 6/6 : CMD ["python", "/floop/hello.py"]
+ ---> Using cache
+ ---> 5665e623a9f5
+Successfully built 5665e623a9f5
+Successfully tagged flooptest:latest
+
+2018-05-11 13:21:55,014 INFO floop0 - test: docker run --name flooptest -v /home/floop/floop/:/floop/ flooptest
+2018-05-11 13:22:02,773 INFO floop0 - test: Hello, World!!!
+
+2018-05-11 13:22:03,245 INFO floop0 - push: rsync -avz -e '/usr/local/bin/docker-machine ssh' ./src/ floop0:'/home/floop/floop/' --delete
+2018-05-11 13:22:05,398 INFO floop0 - push: sending incremental file list
+
+sent 128 bytes  received 12 bytes  56.00 bytes/sec
+total size is 445  speedup is 3.18
+
+2018-05-11 13:22:05,399 INFO floop0 - build: docker build -t floop /home/floop/floop//
+2018-05-11 13:22:08,986 INFO floop0 - build: Sending build context to Docker daemon  4.096kB
+Step 1/6 : FROM library/python
+ ---> 98281429ea18
+Step 2/6 : RUN apt-get update && apt-get install curl
+ ---> Using cache
+ ---> 82123c20cfc2
+Step 3/6 : RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
+ ---> Using cache
+ ---> c13c58e3a02f
+Step 4/6 : RUN python get-pip.py
+ ---> Using cache
+ ---> c33b64fcc5d8
+Step 5/6 : RUN pip install docker-compose
+ ---> Using cache
+ ---> 9b18b90650a9
+Step 6/6 : CMD ["python", "/floop/hello.py"]
+ ---> Using cache
+ ---> 5665e623a9f5
+Successfully built 5665e623a9f5
+Successfully tagged floop:latest
+
+2018-05-11 13:22:09,477 INFO floop0 - push: rsync -avz -e '/usr/local/bin/docker-machine ssh' ./src/ floop0:'/home/floop/floop/' --delete
+2018-05-11 13:22:12,599 INFO floop0 - push: sending incremental file list
+
+sent 128 bytes  received 12 bytes  40.00 bytes/sec
+total size is 445  speedup is 3.18
+
+2018-05-11 13:22:13,092 INFO floop0 - ps: docker ps
+2018-05-11 13:22:16,332 INFO floop0 - ps: CONTAINER ID        IMAGE               COMMAND             CREATED             STATUS              PORTS               NAMES
+
+2018-05-11 13:22:21,026 INFO floop0 - push: rsync -avz -e '/usr/local/bin/docker-machine ssh' ./src/ floop0:'/home/floop/floop/' --delete
+2018-05-11 13:22:23,813 INFO floop0 - push: sending incremental file list
+
+sent 128 bytes  received 12 bytes  56.00 bytes/sec
+total size is 445  speedup is 3.18
+
+2018-05-11 13:22:23,814 INFO floop0 - build: docker build -t floop /home/floop/floop//
+2018-05-11 13:22:28,082 INFO floop0 - build: Sending build context to Docker daemon  4.096kB
+Step 1/6 : FROM library/python
+ ---> 98281429ea18
+Step 2/6 : RUN apt-get update && apt-get install curl
+ ---> Using cache
+ ---> 82123c20cfc2
+Step 3/6 : RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
+ ---> Using cache
+ ---> c13c58e3a02f
+Step 4/6 : RUN python get-pip.py
+ ---> Using cache
+ ---> c33b64fcc5d8
+Step 5/6 : RUN pip install docker-compose
+ ---> Using cache
+ ---> 9b18b90650a9
+Step 6/6 : CMD ["python", "/floop/hello.py"]
+ ---> Using cache
+ ---> 5665e623a9f5
+Successfully built 5665e623a9f5
+Successfully tagged floop:latest
+
+2018-05-11 13:22:28,083 INFO floop0 - run: docker rm -f floop || true
+2018-05-11 13:22:31,647 INFO floop0 - run: floop
+
+2018-05-11 13:22:31,648 INFO floop0 - run: docker run --name floop -v /home/floop/floop/:/floop/ floop
+2018-05-11 13:22:40,967 INFO floop0 - run: Hello, World!!!
+
+2018-05-11 13:22:41,457 INFO floop0 - create: /usr/local/bin/docker-machine create --driver generic --generic-ip-address 192.168.1.122 --generic-ssh-user floop --generic-ssh-key /home/nick/.ssh/id_rsa --engine-storage-driver overlay floop0
+2018-05-11 13:22:41,490 INFO floop0 - create: 
+2018-05-11 13:22:41,491 INFO floop0 - create: Checking with pwd
+2018-05-11 13:22:43,442 INFO floop0 - create: /home/floop
+
+2018-05-11 13:22:43,990 INFO floop0 - push: rsync -avz -e '/usr/local/bin/docker-machine ssh' ./src/ floop0:'/home/floop/floop/' --delete
+2018-05-11 13:22:45,617 INFO floop0 - push: sending incremental file list
+
+sent 128 bytes  received 12 bytes  56.00 bytes/sec
+total size is 445  speedup is 3.18
+
+2018-05-11 13:22:45,618 INFO floop0 - test: docker rm -f flooptest || true
+2018-05-11 13:22:49,258 INFO floop0 - test: flooptest
+
+2018-05-11 13:22:49,259 INFO floop0 - test: docker build -t flooptest -f /home/floop/floop//Dockerfile.test /home/floop/floop/
+2018-05-11 13:22:52,873 INFO floop0 - test: Sending build context to Docker daemon  4.096kB
+Step 1/6 : FROM library/python
+ ---> 98281429ea18
+Step 2/6 : RUN apt-get update && apt-get install curl
+ ---> Using cache
+ ---> 82123c20cfc2
+Step 3/6 : RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
+ ---> Using cache
+ ---> c13c58e3a02f
+Step 4/6 : RUN python get-pip.py
+ ---> Using cache
+ ---> c33b64fcc5d8
+Step 5/6 : RUN pip install docker-compose
+ ---> Using cache
+ ---> 9b18b90650a9
+Step 6/6 : CMD ["python", "/floop/hello.py"]
+ ---> Using cache
+ ---> 5665e623a9f5
+Successfully built 5665e623a9f5
+Successfully tagged flooptest:latest
+
+2018-05-11 13:22:52,874 INFO floop0 - test: docker run --name flooptest -v /home/floop/floop/:/floop/ flooptest
+2018-05-11 13:22:59,746 INFO floop0 - test: Hello, World!!!
+
+2018-05-11 13:23:00,403 INFO floop0 - push: rsync -avz -e '/usr/local/bin/docker-machine ssh' ./src/ floop0:'/home/floop/floop/' --delete
+2018-05-11 13:23:03,134 INFO floop0 - push: sending incremental file list
+
+sent 128 bytes  received 12 bytes  40.00 bytes/sec
+total size is 445  speedup is 3.18
+
+2018-05-11 13:23:03,135 INFO floop0 - build: docker build -t floop /home/floop/floop//
+2018-05-11 13:23:07,905 INFO floop0 - build: Sending build context to Docker daemon  4.096kB
+Step 1/6 : FROM library/python
+ ---> 98281429ea18
+Step 2/6 : RUN apt-get update && apt-get install curl
+ ---> Using cache
+ ---> 82123c20cfc2
+Step 3/6 : RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
+ ---> Using cache
+ ---> c13c58e3a02f
+Step 4/6 : RUN python get-pip.py
+ ---> Using cache
+ ---> c33b64fcc5d8
+Step 5/6 : RUN pip install docker-compose
+ ---> Using cache
+ ---> 9b18b90650a9
+Step 6/6 : CMD ["python", "/floop/hello.py"]
+ ---> Using cache
+ ---> 5665e623a9f5
+Successfully built 5665e623a9f5
+Successfully tagged floop:latest
+
+2018-05-11 13:23:08,451 INFO floop0 - push: rsync -avz -e '/usr/local/bin/docker-machine ssh' ./src/ floop0:'/home/floop/floop/' --delete
+2018-05-11 13:23:10,810 INFO floop0 - push: sending incremental file list
+
+sent 128 bytes  received 12 bytes  56.00 bytes/sec
+total size is 445  speedup is 3.18
+
+2018-05-11 13:23:11,294 INFO floop0 - ps: docker ps
+2018-05-11 13:23:14,144 INFO floop0 - ps: CONTAINER ID        IMAGE               COMMAND             CREATED             STATUS              PORTS               NAMES
+
+2018-05-11 14:04:32,642 INFO floop0 - push: rsync -avz -e '/usr/local/bin/docker-machine ssh' ./src/ floop0:'/home/floop/floop/' --delete
+2018-05-11 14:04:36,796 INFO floop0 - push: sending incremental file list
+./
+buildspec.yml
+docker-compose.yml
+env/
+
+sent 583 bytes  received 65 bytes  144.00 bytes/sec
+total size is 870  speedup is 1.34
+
+2018-05-11 14:04:36,796 INFO floop0 - build: docker build -t floop /home/floop/floop//
+2018-05-11 14:04:40,696 INFO floop0 - build: Sending build context to Docker daemon  6.656kB
+Step 1/6 : FROM library/python
+ ---> 98281429ea18
+Step 2/6 : RUN apt-get update && apt-get install curl
+ ---> Using cache
+ ---> 82123c20cfc2
+Step 3/6 : RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
+ ---> Using cache
+ ---> c13c58e3a02f
+Step 4/6 : RUN python get-pip.py
+ ---> Using cache
+ ---> c33b64fcc5d8
+Step 5/6 : RUN pip install docker-compose
+ ---> Using cache
+ ---> 9b18b90650a9
+Step 6/6 : CMD ["python", "/floop/hello.py"]
+ ---> Using cache
+ ---> 5665e623a9f5
+Successfully built 5665e623a9f5
+Successfully tagged floop:latest
+
+2018-05-11 14:04:45,816 INFO floop0 - push: rsync -avz -e '/usr/local/bin/docker-machine ssh' ./src/ floop0:'/home/floop/floop/' --delete
+2018-05-11 14:04:48,342 INFO floop0 - push: sending incremental file list
+
+sent 234 bytes  received 13 bytes  70.57 bytes/sec
+total size is 870  speedup is 3.52
+
+2018-05-11 14:04:48,891 INFO floop0 - push: rsync -avz -e '/usr/local/bin/docker-machine ssh' ./src/ floop0:'/home/floop/floop/' --delete
+2018-05-11 14:04:52,040 INFO floop0 - push: sending incremental file list
+
+sent 234 bytes  received 13 bytes  70.57 bytes/sec
+total size is 870  speedup is 3.52
+
+2018-05-11 14:04:52,041 INFO floop0 - build: docker build -t floop /home/floop/floop//
+2018-05-11 14:04:55,416 INFO floop0 - build: Sending build context to Docker daemon  6.656kB
+Step 1/6 : FROM library/python
+ ---> 98281429ea18
+Step 2/6 : RUN apt-get update && apt-get install curl
+ ---> Using cache
+ ---> 82123c20cfc2
+Step 3/6 : RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
+ ---> Using cache
+ ---> c13c58e3a02f
+Step 4/6 : RUN python get-pip.py
+ ---> Using cache
+ ---> c33b64fcc5d8
+Step 5/6 : RUN pip install docker-compose
+ ---> Using cache
+ ---> 9b18b90650a9
+Step 6/6 : CMD ["python", "/floop/hello.py"]
+ ---> Using cache
+ ---> 5665e623a9f5
+Successfully built 5665e623a9f5
+Successfully tagged floop:latest
+
+2018-05-11 14:04:55,417 INFO floop0 - run: docker rm -f floop || true
+2018-05-11 14:04:58,387 INFO floop0 - run: floop
+
+2018-05-11 14:04:58,388 INFO floop0 - run: docker run --name floop -v /home/floop/floop/:/floop/ floop
+2018-05-11 14:05:06,350 INFO floop0 - run: Hello, World!!!
+
+2018-05-11 14:05:06,945 INFO floop0 - ps: docker ps
+2018-05-11 14:05:10,527 INFO floop0 - ps: CONTAINER ID        IMAGE               COMMAND             CREATED             STATUS              PORTS               NAMES
+
+2018-05-11 14:05:11,186 INFO floop0 - push: rsync -avz -e '/usr/local/bin/docker-machine ssh' ./src/ floop0:'/home/floop/floop/' --delete
+2018-05-11 14:05:13,497 INFO floop0 - push: sending incremental file list
+
+sent 234 bytes  received 13 bytes  98.80 bytes/sec
+total size is 870  speedup is 3.52
+
+2018-05-11 14:05:13,497 INFO floop0 - test: docker rm -f flooptest || true
+2018-05-11 14:05:17,103 INFO floop0 - test: flooptest
+
+2018-05-11 14:05:17,104 INFO floop0 - test: docker build -t flooptest -f /home/floop/floop//Dockerfile.test /home/floop/floop/
+2018-05-11 14:05:23,435 INFO floop0 - test: Sending build context to Docker daemon  6.656kB
+Step 1/6 : FROM library/python
+ ---> 98281429ea18
+Step 2/6 : RUN apt-get update && apt-get install curl
+ ---> Using cache
+ ---> 82123c20cfc2
+Step 3/6 : RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
+ ---> Using cache
+ ---> c13c58e3a02f
+Step 4/6 : RUN python get-pip.py
+ ---> Using cache
+ ---> c33b64fcc5d8
+Step 5/6 : RUN pip install docker-compose
+ ---> Using cache
+ ---> 9b18b90650a9
+Step 6/6 : CMD ["python", "/floop/hello.py"]
+ ---> Using cache
+ ---> 5665e623a9f5
+Successfully built 5665e623a9f5
+Successfully tagged flooptest:latest
+
+2018-05-11 14:05:23,437 INFO floop0 - test: docker run --name flooptest -v /home/floop/floop/:/floop/ flooptest
+2018-05-11 14:05:29,185 INFO floop0 - test: Hello, World!!!
+
+2018-05-11 14:05:29,643 INFO floop0 - create: /usr/local/bin/docker-machine create --driver generic --generic-ip-address 192.168.1.122 --generic-ssh-user floop --generic-ssh-key /home/nick/.ssh/id_rsa --engine-storage-driver overlay floop0
+2018-05-11 14:05:29,673 INFO floop0 - create: 
+2018-05-11 14:05:29,673 INFO floop0 - create: Checking with pwd
+2018-05-11 14:05:33,097 INFO floop0 - create: /home/floop
+
+2018-05-11 14:05:33,601 INFO floop0 - push: rsync -avz -e '/usr/local/bin/docker-machine ssh' ./src/ floop0:'/home/floop/floop/' --delete
+2018-05-11 14:05:36,295 INFO floop0 - push: sending incremental file list
+
+sent 234 bytes  received 13 bytes  70.57 bytes/sec
+total size is 870  speedup is 3.52
+
+2018-05-11 14:05:36,297 INFO floop0 - build: docker build -t floop /home/floop/floop//
+2018-05-11 14:05:40,277 INFO floop0 - build: Sending build context to Docker daemon  6.656kB
+Step 1/6 : FROM library/python
+ ---> 98281429ea18
+Step 2/6 : RUN apt-get update && apt-get install curl
+ ---> Using cache
+ ---> 82123c20cfc2
+Step 3/6 : RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
+ ---> Using cache
+ ---> c13c58e3a02f
+Step 4/6 : RUN python get-pip.py
+ ---> Using cache
+ ---> c33b64fcc5d8
+Step 5/6 : RUN pip install docker-compose
+ ---> Using cache
+ ---> 9b18b90650a9
+Step 6/6 : CMD ["python", "/floop/hello.py"]
+ ---> Using cache
+ ---> 5665e623a9f5
+Successfully built 5665e623a9f5
+Successfully tagged floop:latest
+
+2018-05-11 14:05:45,302 INFO floop0 - push: rsync -avz -e '/usr/local/bin/docker-machine ssh' ./src/ floop0:'/home/floop/floop/' --delete
+2018-05-11 14:05:47,448 INFO floop0 - push: sending incremental file list
+
+sent 234 bytes  received 13 bytes  98.80 bytes/sec
+total size is 870  speedup is 3.52
+
+2018-05-11 14:05:47,928 INFO floop0 - push: rsync -avz -e '/usr/local/bin/docker-machine ssh' ./src/ floop0:'/home/floop/floop/' --delete
+2018-05-11 14:05:50,409 INFO floop0 - push: sending incremental file list
+
+sent 234 bytes  received 13 bytes  70.57 bytes/sec
+total size is 870  speedup is 3.52
+
+2018-05-11 14:05:50,410 INFO floop0 - build: docker build -t floop /home/floop/floop//
+2018-05-11 14:05:54,380 INFO floop0 - build: Sending build context to Docker daemon  6.656kB
+Step 1/6 : FROM library/python
+ ---> 98281429ea18
+Step 2/6 : RUN apt-get update && apt-get install curl
+ ---> Using cache
+ ---> 82123c20cfc2
+Step 3/6 : RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
+ ---> Using cache
+ ---> c13c58e3a02f
+Step 4/6 : RUN python get-pip.py
+ ---> Using cache
+ ---> c33b64fcc5d8
+Step 5/6 : RUN pip install docker-compose
+ ---> Using cache
+ ---> 9b18b90650a9
+Step 6/6 : CMD ["python", "/floop/hello.py"]
+ ---> Using cache
+ ---> 5665e623a9f5
+Successfully built 5665e623a9f5
+Successfully tagged floop:latest
+
+2018-05-11 14:05:54,381 INFO floop0 - run: docker rm -f floop || true
+2018-05-11 14:05:59,517 INFO floop0 - run: floop
+
+2018-05-11 14:05:59,519 INFO floop0 - run: docker run --name floop -v /home/floop/floop/:/floop/ floop
+2018-05-11 14:06:07,264 INFO floop0 - run: Hello, World!!!
+
+2018-05-11 14:06:07,783 INFO floop0 - ps: docker ps
+2018-05-11 14:06:11,330 INFO floop0 - ps: CONTAINER ID        IMAGE               COMMAND             CREATED             STATUS              PORTS               NAMES
+
+2018-05-11 14:06:11,808 INFO floop0 - push: rsync -avz -e '/usr/local/bin/docker-machine ssh' ./src/ floop0:'/home/floop/floop/' --delete
+2018-05-11 14:06:14,179 INFO floop0 - push: sending incremental file list
+
+sent 234 bytes  received 13 bytes  70.57 bytes/sec
+total size is 870  speedup is 3.52
+
+2018-05-11 14:06:14,180 INFO floop0 - test: docker rm -f flooptest || true
+2018-05-11 14:06:17,927 INFO floop0 - test: flooptest
+
+2018-05-11 14:06:17,928 INFO floop0 - test: docker build -t flooptest -f /home/floop/floop//Dockerfile.test /home/floop/floop/
+2018-05-11 14:06:22,067 INFO floop0 - test: Sending build context to Docker daemon  6.656kB
+Step 1/6 : FROM library/python
+ ---> 98281429ea18
+Step 2/6 : RUN apt-get update && apt-get install curl
+ ---> Using cache
+ ---> 82123c20cfc2
+Step 3/6 : RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
+ ---> Using cache
+ ---> c13c58e3a02f
+Step 4/6 : RUN python get-pip.py
+ ---> Using cache
+ ---> c33b64fcc5d8
+Step 5/6 : RUN pip install docker-compose
+ ---> Using cache
+ ---> 9b18b90650a9
+Step 6/6 : CMD ["python", "/floop/hello.py"]
+ ---> Using cache
+ ---> 5665e623a9f5
+Successfully built 5665e623a9f5
+Successfully tagged flooptest:latest
+
+2018-05-11 14:06:22,068 INFO floop0 - test: docker run --name flooptest -v /home/floop/floop/:/floop/ flooptest
+2018-05-11 14:06:31,648 INFO floop0 - test: Hello, World!!!
+
+2018-05-11 14:06:32,094 INFO floop0 - create: /usr/local/bin/docker-machine create --driver generic --generic-ip-address 192.168.1.122 --generic-ssh-user floop --generic-ssh-key /home/nick/.ssh/id_rsa --engine-storage-driver overlay floop0
+2018-05-11 14:06:32,140 INFO floop0 - create: 
+2018-05-11 14:06:32,141 INFO floop0 - create: Checking with pwd
+2018-05-11 14:06:34,473 INFO floop0 - create: /home/floop
+

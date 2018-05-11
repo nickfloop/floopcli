@@ -85,6 +85,7 @@ class Config(object):
         self.__config = value
 
     def parse(self):
+        # TODO: check that device names are unique
         if not isdir(self.config['host_source_directory']):
             raise SourceDirectoryDoesNotExist(
                     self.config['host_source_directory']

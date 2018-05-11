@@ -1,1 +1,0 @@
-{"device_target_directory": "/home/floop/floop/", "host_rsync_bin": "/usr/bin/rsync", "host_docker_machine_bin": "/usr/local/bin/docker-machine", "devices": [{"user": "floop", "address": "192.168.1.122", "name": "floop0", "ssh_key": "~/.ssh/id_rsa"}], "host_source_directory": "./src/", "host_docker_bin": "/usr/bin/docker"}

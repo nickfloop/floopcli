@@ -14,6 +14,8 @@ docs/build/
 .pytest_cache/
 **/*.backup*
 .coverage
+.coverage*
 docker.key
 create_test/
 test_test/
+floop.log

@@ -2,19 +2,40 @@
    sphinx-quickstart on Fri Apr 27 20:41:47 2018.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
-
-Welcome to floop-cli's documentation!
-=====================================
+.. _topics-index:
+=============================
+Floop |version| Documentation
+=============================
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1 
    :caption: Contents:
 
+Join our alpha test!
+    Learn more at the `Forward Loop website <https://www.forward-loop.com>`_
 
+See the source
+    On Github
 
-Indices and tables
-==================
+Report issues
+    On Github
 
-* :ref:`genindex`
+Getting Started
+============
+:doc:`intro/overview`
+    When, how, and why you should use floop
+
+:doc:`intro/install`
+    Install floop on your host machine
+
+:doc:`intro/hello`
+    Run a Hello, World! example with floop
+
+Use Floop with Your Code
+========================
+:doc:`intro/setup`
+    Set up floop for your project 
+
+Index
+=====
 * :ref:`modindex`
-* :ref:`search`

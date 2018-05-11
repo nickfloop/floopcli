@@ -16,6 +16,7 @@ import os
 import sys
 autodoc_default_flags = ['members', 'private-members']
 coverage_skip_undoc_in_source = True
+html_logo = './logo.png'
 sys.path.insert(0, os.path.abspath('../floop'))
 
 # -- Project information -----------------------------------------------------
@@ -78,6 +79,7 @@ pygments_style = 'sphinx'
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
+#html_theme = 'sphinx_rtd_theme'
 html_theme = 'alabaster'
 
 # Theme options are theme-specific and customize the look and feel of a theme

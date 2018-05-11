@@ -11,7 +11,7 @@ from multiprocessing import Pool
 from platform import system
 from time import time
 from floop.util.termcolor import termcolor, cprint 
-from floop.device.device import build, create, destroy, logs, ps, push, run, test, DeviceSourceDirectoryDoesNotExist
+from floop.device.device import build, create, destroy, logs, ps, push, run, test, DeviceSourceDirectoryNotFound
 from .config import Config, ConfigFileNotFound, SourceDirectoryDoesNotExist, MalformedConfigException, UnmetHostDependencyException
 
 _FLOOP_CONFIG_DEFAULT_FILE = './floop.json'
@@ -34,7 +34,7 @@ class IncompatibleCommandLineOptions(Exception):
     pass
 
 class FloopCLI(object):
-    #TODO: make all calls parallel and async
+    #TODO: add --version flag
     '''
     CLI entry point, handles all CLI calls
 
@@ -106,7 +106,7 @@ class FloopCLI(object):
 \tGenerate a default config file by running: floop config\n\
 \tUse the -c flag to point to a non-default config file: floop -c your-config-file.json'.format(
     config_file, _FLOOP_CONFIG_DEFAULT_FILE))
-        except (SourceDirectoryDoesNotExist, DeviceSourceDirectoryDoesNotExist):
+        except (SourceDirectoryDoesNotExist, DeviceSourceDirectoryNotFound):
             exit('''Error| Cannot find host_source_directory in config file: {}\n\n\
 \tOptions to fix this error:\n\
 \t--------------------------\n\

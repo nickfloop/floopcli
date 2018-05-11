@@ -1,10 +1,11 @@
 import subprocess
 from shlex import split
+from typing import Tuple 
 
 class SystemCallException(Exception):
     pass
 
-def syscall(command, check=False, verbose=False):
+def syscall(command: str, check: bool=False, verbose: bool=False) -> Tuple[bytes, bytes]:
     command = split(command)
     process = subprocess.Popen(command, stdout=subprocess.PIPE)
     out, err = process.communicate()
