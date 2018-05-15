@@ -6,12 +6,11 @@ from pathlib import Path
 from shutil import which
 from floop.device.device import Device
 
+# default config to write when using floop config 
 _FLOOP_CONFIG_DEFAULT_CONFIGURATION = {
     'device_target_directory' : '/home/floop/floop/',
     'host_rsync_bin' : which('rsync'),
     'host_docker_bin' : which('docker'),
-    # docker-compose binary should be compiled for ARM devices, so non-ARM
-    # hosts need to exclude it from their path
     'host_docker_machine_bin' : which('docker-machine'),
     'host_source_directory' : './src/',
     'devices' : [{
@@ -23,27 +22,58 @@ _FLOOP_CONFIG_DEFAULT_CONFIGURATION = {
 }
 
 class CannotSetImmutableAttributeException(Exception):
+    '''
+    Tried to set immutable attribute after initialization
+    '''
     pass
 
 class MalformedConfigException(Exception):
+    '''
+    Provided config did not have all expected keys
+    '''
     pass
 
 class MalformedDeviceConfigException(Exception):
+    '''
+    At least one device in provided config did not have all expected keys
+    '''
     pass
 
 class SourceDirectoryDoesNotExist(Exception):
+    '''
+    Provided config "host_source_directory" does not exist
+    '''
     pass
 
-class ConfigFileNotFound(Exception):
+class ConfigFileDoesNotExist(Exception):
+    '''
+    Provided configuration file does not exist
+    '''
     pass 
 
 class TargetBuildFileDoesNotExist(Exception):
+    '''
+    Provided "host_source_directory" in config has no Dockerfile
+    '''
     pass 
 
 class UnmetHostDependencyException(Exception):
+    '''
+    Provided dependency binary path does not exist
+    '''
     pass
 
-def read_json(json_file):
+def _read_json(json_file):
+    '''
+    Convenient wrapper for reading .json file into dict
+
+    Args:
+        json_file (str):
+            Path to json file
+    Returns:
+        dict:
+            dictionary of .json file content
+    '''
     with open(json_file) as j:
         return json.load(j)
 
@@ -55,8 +85,8 @@ class Config(object):
     def validate(self):
         config_file = self.config_file
         if not isfile(config_file):
-            raise ConfigFileNotFound(config_file)
-        self.config = read_json(config_file)
+            raise ConfigFileDoesNotExist(config_file)
+        self.config = _read_json(config_file)
         for key, val in self.config.items():
             if key.endswith('_bin'):
                 if val is None:

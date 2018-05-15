@@ -67,9 +67,21 @@ class DeviceRunException(Exception):
     '''
     pass
 
+class DeviceTestException(Exception):
+    '''
+    Target device test command returned non-zero exit code
+    '''
+    pass
+
 class DeviceDestroyException(Exception):
     '''
     Target device destroy command returned non-zero exit code
+    '''
+    pass
+
+class DevicePSException(Exception):
+    '''
+    Target device ps command returned non-zero exit code
     '''
     pass
 
@@ -183,7 +195,10 @@ class Device(object):
         else:
             raise CannotSetImmutableAttribute('user')
 
-    def run_ssh_command(self, command: str, check: bool=True) -> str:
+    def run_ssh_command(self,
+            command: str,
+            check: bool=True,
+            verbose: bool=False) -> str:
         '''
         Run docker-machine SSH command on target device
 
@@ -201,8 +216,8 @@ class Device(object):
         '''
         sys_string = '{} ssh {} {}'.format(
             self.docker_machine_bin, self.name, command)
-        out, err = syscall(sys_string, check=check)
-        return out.decode('utf-8')
+        out, err = syscall(sys_string, check=check, verbose=verbose)
+        return out
 
 def __log(device: Device, level: str, message: str) -> None:
     '''
@@ -253,7 +268,7 @@ def create(device: Device, check: bool=True) -> None:
     __log(device, 'info', create_command)
     try:
         out, _ = syscall(create_command, check=False)
-        __log(device, 'info', out.decode('utf-8'))
+        __log(device, 'info', out)
         if check:
             check_command = 'pwd'
             __log(device, 'info', 'Checking with {}'.format(check_command))
@@ -290,14 +305,16 @@ def push(device: Device,
     if not isdir(source_directory):
         __log(device, 'error', 'Source directory not found: {}'.format(source_directory))
         raise DeviceSourceDirectoryNotFound(source_directory)
-    sys_string = "rsync -avz -e '{} ssh' {} {}:'{}' --delete".format(
-        device.docker_machine_bin, source_directory,
-        device.name, target_directory
-        )
-    __log(device, 'info', sys_string)
     try:
-        out, err = syscall(sys_string, check=check)
-        __log(device, 'info', out.decode('utf-8'))
+        mkdir_string = 'mkdir -p {}'.format(target_directory)
+        __log(device, 'info', mkdir_string)
+        out = device.run_ssh_command(mkdir_string, check=True)
+        __log(device, 'info', out)
+        sync_string = "rsync -avz -e '{} ssh' {} {}:'{}' --delete".format(device.docker_machine_bin, source_directory,
+            device.name, target_directory)
+        __log(device, 'info', sync_string)
+        out, err = syscall(sync_string, check=check)
+        __log(device, 'info', out)
     except SystemCallException as e:
         __log(device, 'error', str(e))
         raise DeviceCommunicationException(str(e))
@@ -343,7 +360,8 @@ def build(device: Device,
 def run(device: Device,
         source_directory: str,
         target_directory: str,
-        check: bool=True) -> None:
+        check: bool=True,
+        verbose: bool=False) -> None:
     '''
     Parallelizable; push, build, then run files from host on target device 
 
@@ -368,7 +386,7 @@ def run(device: Device,
     rm_command = 'docker rm -f floop || true'
     __log(device, 'info', rm_command)
     try:
-        out = device.run_ssh_command(command=rm_command, check=check)
+        out = device.run_ssh_command(command=rm_command, check=check, verbose=verbose)
         __log(device, 'info', out)
     except SystemCallException as e:
         __log(device, 'error', str(e))
@@ -377,7 +395,7 @@ def run(device: Device,
             target_directory)
     __log(device, 'info', run_command)
     try:
-        out = device.run_ssh_command(command=run_command, check=check)
+        out = device.run_ssh_command(command=run_command, check=check, verbose=verbose)
         __log(device, 'info', out)
     except SystemCallException as e:
         __log(device, 'error', str(e))
@@ -407,11 +425,6 @@ def ps(device: Device,
     except SystemCallException as e:
         __log(device, 'error', str(e))
         raise DevicePSException(str(e))
-
-def logs(device: Device,
-        check: bool=True) -> None:
-    logs_command = 'docker logs floop'
-    device.run_ssh_command(logs_command, check=check)
 
 # pytest thinks this is a test!
 @pytest.mark.skip(reason='Not actually a test!')
@@ -491,7 +504,7 @@ def destroy(device: Device,
         __log(device, 'info', out)
         rm_device = '{} rm -f {}'.format(device.docker_machine_bin, device.name)
         out = syscall(rm_device, check=check)
-        __log(device, 'info', out.decode('utf-8'))
+        __log(device, 'info', out)
     except SystemCallException as e:
         __log(device, 'error', str(e))
         raise DeviceDestroyException(str(e))

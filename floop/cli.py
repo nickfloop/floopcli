@@ -2,6 +2,7 @@ import argparse
 import json
 import logging
 
+from pkg_resources import require, DistributionNotFound
 from sys import argv, exit, modules
 from shutil import copyfile
 from functools import partial
@@ -11,8 +12,14 @@ from multiprocessing import Pool
 from platform import system
 from time import time
 from floop.util.termcolor import termcolor, cprint 
-from floop.device.device import build, create, destroy, logs, ps, push, run, test, DeviceSourceDirectoryNotFound
-from .config import Config, ConfigFileNotFound, SourceDirectoryDoesNotExist, MalformedConfigException, UnmetHostDependencyException
+from floop.device.device import build, create, destroy, ps, push, run, test, \
+        DeviceSourceDirectoryNotFound, \
+        DeviceBuildException, \
+        DeviceRunException, \
+        DeviceTestException, \
+        DeviceCommunicationException, \
+        DevicePSException
+from .config import Config, ConfigFileDoesNotExist, SourceDirectoryDoesNotExist, MalformedConfigException, UnmetHostDependencyException
 
 _FLOOP_CONFIG_DEFAULT_FILE = './floop.json'
 
@@ -31,18 +38,33 @@ Supported commands:
 '''
 
 class IncompatibleCommandLineOptions(Exception):
+    '''
+    Provided CLI commands and flags cannot be used together
+    '''
     pass
 
+def quiet():
+    '''
+    Remove console handler from logger to prevent printing to stdout
+
+    This is a convenience function that you can use for defining
+    verbose flags for CLI commands. If the flag is present, do nothing.
+    If the -v flag is absent, then call quiet() inside of the method.
+    '''
+    log = logging.getLogger()
+    for handler in log.handlers[:]:
+        if handler.name == 'console':
+            log.removeHandler(handler)
+
 class FloopCLI(object):
-    #TODO: add --version flag
     '''
     CLI entry point, handles all CLI calls
 
     Parses all CLI commands then calls the appropriate
     class method matching the CLI commands
 
-    attributes:
-        config (floop.config.Config):  
+    Attributes:
+        config (:py:class:`floop.config.Config`):  
             configuration used during CLI call
         source_directory (str):
             filepath of source code directory on host
@@ -54,10 +76,26 @@ class FloopCLI(object):
     def __init__(self):
         parser = argparse.ArgumentParser(description='Floop CLI tool',
                 usage=_FLOOP_USAGE_STRING)
+        parser.add_argument('--version',
+                help='Print floop CLI version',
+                action='store_true')
+        # handle --version flag
+        if len(argv) == 2 and argv[-1] == '--version':
+            args = parser.parse_args(argv[1:])
+            if args.version:
+                try:
+                    version = require('floop-cli')[0].version
+                    print(version)
+                    exit(0)
+                except DistributionNotFound:
+                    exit('''Error| pip package "floop-cli" is not installed\n\n
+\tOptions to fix this error:\n\
+\t--------------------------\n\
+\tInstall floop via pip: pip install floop
+''')
         parser.add_argument('-c', '--config-file', 
                 help='Specify a non-default configuration file')
         parser.add_argument('command', help='Subcommand to run')
-        # index of the command to be parsed below
         config_file = _FLOOP_CONFIG_DEFAULT_FILE
         try:
             self.command_index = 2
@@ -98,7 +136,7 @@ class FloopCLI(object):
 \tCopy an existing floop config file to the default path: {}\n\
 \tOnly use one of the following: -c or config\n\
 '''.format(_FLOOP_CONFIG_DEFAULT_FILE))
-        except ConfigFileNotFound:
+        except ConfigFileDoesNotExist:
             exit('Error| floop config file not found: {}\n\n\
 \tOptions to fix this error:\n\
 \t--------------------------\n\
@@ -127,15 +165,48 @@ class FloopCLI(object):
 \t--------------------------\n\
 \tInstall dependency for your operating system\n\
 '''.format(str(e)))
-        
+        except DeviceBuildException as e:
+            exit('''Error| Build on target device returned non-zero error\n\n\
+\tOptions to fix this error:\n\
+\t--------------------------\n\
+\tCheck floop logs for this device: floop logs -m device-name\n\
+''')
+        except DeviceRunException as e:
+            exit('''Error| Run on target device returned non-zero error\n\n\
+\tOptions to fix this error:\n\
+\t--------------------------\n\
+\tCheck floop logs for this device: floop logs -m device-name\n\
+''')
+        except DeviceTestException as e:
+            exit('''Error| Test on target device returned non-zero error\n\n\
+\tOptions to fix this error:\n\
+\t--------------------------\n\
+\tCheck floop logs for this device: floop logs -m device-name\n\
+''')
+        except DeviceCommunicationException as e:
+            exit('''Error| Communication with target device returned non-zero error\n\n\
+\tOptions to fix this error:\n\
+\t--------------------------\n\
+\tCheck that you have Internet access from the host\n\
+\tCheck that the device is still accessible at the address in your config file\n\
+''')
+        except DevicePSException as e:
+            exit('''Error| ps on target device returned non-zero error\n\n\
+\tOptions to fix this error:\n\
+\t--------------------------\n\
+\tCheck that you have Internet access from the host\n\
+\tCheck that the device is still accessible at the address in your config file\n\
+\tTry to re-create the target device: floop create\n\
+''')
+
     def __cprint(self, string, color=termcolor.DEFAULT):
         '''
         Wrapper for internal color print
 
-        args:
-            string: 
+        Args:
+            string (str): 
                 string to print
-            color:
+            color (str):
                 terminal color name
         '''
         cprint(
@@ -177,32 +248,78 @@ class FloopCLI(object):
         )
 
     def create(self):
-        # TODO: add --check flag to check ssh communication with a collection of enumerated commands
+        '''
+        Create new Docker Machines for each device in the configuration
+        '''
         parser = argparse.ArgumentParser(
                 description='Initialize single project communication between host and device(s)')
+        parser.add_argument('-v', '--verbose',
+                help='Print system commands and results to stdout',
+                action='store_true')
+        args = parser.parse_args(argv[self.command_index:])
+        if not args.verbose:
+            quiet()
         with Pool() as pool:
             pool.map(create, self.devices)
 
     def ps(self):
+        '''
+        Show running applications and tests on all targets
+        '''
         # TODO: add metrics command to get resource usage info AND process info
         parser = argparse.ArgumentParser(
                 description='List all initiated device(s)')
+        parser.add_argument('-v', '--verbose',
+                help='Print system commands and results to stdout',
+                action='store_true')
+        args = parser.parse_args(argv[self.command_index:])
+        if not args.verbose:
+            quiet()
         print('ps...')
         with Pool() as pool:
             pool.map(ps, self.devices)
      
     def logs(self):
+        '''
+        Print target logs to the host console
+        '''
         # TODO: add -f option (bonus if it's pipe-able)
         parser = argparse.ArgumentParser(
                 description='Logs from initialized device(s)')
+        parser.add_argument('-v', '--verbose',
+                help='Print system commands and results to stdout',
+                action='store_true')
+        parser.add_argument('-m', '--match',
+                help='Print lines that contain the match term')
+        args = parser.parse_args(argv[self.command_index:])
+        if not args.verbose:
+            quiet()
         print('logs...')
-        with Pool() as pool:
-            pool.map(logs, self.devices)
+        with open('floop.log') as log:
+            for line in log.readlines():
+                if args.match is not None:
+                    if args.match in line:
+                        print(line, end="")
+                elif not line == '\n':
+                    print(line, end="")
 
     def push(self):
+        '''
+        Push code from host to all targets
+
+        Automatically synchronizes code between host and targets.
+        If you delete a file in the host source, then that file will
+        be deleted on all targets.
+        '''
         # TODO: add .floopignore ?
         parser = argparse.ArgumentParser(
                 description='Push code from host to device(s)')
+        parser.add_argument('-v', '--verbose',
+                help='Print system commands and results to stdout',
+                action='store_true')
+        args = parser.parse_args(argv[self.command_index:])
+        if not args.verbose:
+            quiet()
         print('push...')
         with Pool() as pool:
             pool.map(
@@ -212,9 +329,22 @@ class FloopCLI(object):
                     self.devices)
 
     def build(self):
+        '''
+        Build code on all targets, using Dockerfile in source directory
+
+        Automatically performs a push before building in
+        order to ensure that the host and targets have
+        the same code.
+        '''
         # TODO: add -v command to tee build outputs to logs AND local stdout
         parser = argparse.ArgumentParser(
                 description='Build code on device(s)')
+        parser.add_argument('-v', '--verbose',
+                help='Print system commands and results to stdout',
+                action='store_true')
+        args = parser.parse_args(argv[self.command_index:])
+        if not args.verbose:
+            quiet()
         print('build...')
         #self.push()
         with Pool() as pool:
@@ -225,9 +355,22 @@ class FloopCLI(object):
                     self.devices)
 
     def run(self):
+        '''
+        Run code on all targets, using Dockerfile in source directory
+
+        Automatically performs a push and a build
+        in order to ensure that the host and targets
+        have the same code.
+        '''
         # TODO: add -v command to tee build outputs to logs AND local stdout
         parser = argparse.ArgumentParser(
                 description='Run code on device(s)')
+        parser.add_argument('-v', '--verbose',
+                help='Print system commands and results to stdout',
+                action='store_true')
+        args = parser.parse_args(argv[self.command_index:])
+        if not args.verbose:
+            quiet()
         print('run...')
         with Pool()as pool:
             pool.map(
@@ -237,9 +380,22 @@ class FloopCLI(object):
                     self.devices)
                 
     def test(self):
+        '''
+        Test code on all targets, using Dockerfile.test in source directory
+
+        Automatically performs a push and a build
+        in order to ensure that the host and targets
+        have the same code.
+        '''
         # TODO: check that test YAML exists
         parser = argparse.ArgumentParser(
                 description='Test code on device(s)')
+        parser.add_argument('-v', '--verbose',
+                help='Print system commands and results to stdout',
+                action='store_true')
+        args = parser.parse_args(argv[self.command_index:])
+        if not args.verbose:
+            quiet()
         print('test...')
         test_command = 'docker build'
         with Pool()as pool:
@@ -250,8 +406,19 @@ class FloopCLI(object):
                     self.devices)
 
     def destroy(self):
+        '''
+        Destroy project, code, and environment on all targets
+
+        Does not remove local source code, builds, test, or logs.
+        '''
         parser = argparse.ArgumentParser(
                 description='Destroy project, code, and environment on device(s) but not host')
+        parser.add_argument('-v', '--verbose',
+                help='Print system commands and results to stdout',
+                action='store_true')
+        args = parser.parse_args(argv[self.command_index:])
+        if not args.verbose:
+            quiet()
         print('clean...')
         with Pool() as pool:
             pool.map(destroy, self.devices)

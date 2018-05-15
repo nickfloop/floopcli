@@ -3,7 +3,7 @@ import pytest
 from os import remove
 from os.path import abspath, dirname, isfile
 
-from floop.config import Config, ConfigFileNotFound, CannotSetImmutableAttributeException, MalformedConfigException, SourceDirectoryDoesNotExist
+from floop.config import Config, ConfigFileDoesNotExist, CannotSetImmutableAttributeException, MalformedConfigException, SourceDirectoryDoesNotExist
 from floop.test.floop_test.fixture import *
 
 def test_floop_config_init(fixture_valid_config_file):
@@ -13,7 +13,7 @@ def test_floop_config_validate(fixture_valid_config_file):
     Config(fixture_valid_config_file).validate()
 
 def test_floop_config_nonexistent_file_does_not_validate():
-    with pytest.raises(ConfigFileNotFound):
+    with pytest.raises(ConfigFileDoesNotExist):
         Config('definitely/not/a/real/config').validate()
 
 def test_floop_config_cannot_reset_config(fixture_valid_config_file):

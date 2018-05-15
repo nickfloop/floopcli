@@ -8,11 +8,14 @@ class termcolor:
     DEFAULT = '\033[0m'
     END = '\033[0m'
 
-def cprint(string, color, time=True, tag=None):
+def cprint(string, color=termcolor.DEFAULT, time=True, tag=None, capture=False):
     print_string = color + string + termcolor.END
     if time:
         time_string = '[' + termcolor.TIME + str(datetime.now()) + termcolor.END + '] '
         if tag is not None:
             time_string = '[' + termcolor.TIME + str(datetime.now()) + ' ' + tag + termcolor.END + '] '
         print_string = time_string + print_string
-    print(print_string)
+    if capture:
+        return print_string
+    else:
+        print(print_string)

@@ -1,5 +1,5 @@
 import pytest
-from floop.device.device import create, build, run, push, ps, logs, test, destroy, Device, DeviceCreateException, CannotSetImmutableAttribute, SSHKeyNotFound
+from floop.device.device import create, build, run, push, ps, test, destroy, Device, DeviceCreateException, CannotSetImmutableAttribute, SSHKeyNotFound
 from floop.util.syscall import syscall
 
 import os

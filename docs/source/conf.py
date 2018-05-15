@@ -16,7 +16,14 @@ import os
 import sys
 autodoc_default_flags = ['members', 'private-members']
 coverage_skip_undoc_in_source = True
+# universal setting
 html_logo = './logo.png'
+# alabaster theme options
+html_theme_options = {
+        'show_powered_by' : False,
+        'head_font_family' : 'Arial',
+        'fixed_sidebar' : True 
+}
 sys.path.insert(0, os.path.abspath('../floop'))
 
 # -- Project information -----------------------------------------------------
@@ -44,6 +51,7 @@ extensions = [
     'sphinx.ext.coverage',
     'sphinx.ext.viewcode',
     'sphinx.ext.autodoc',
+    'sphinx_tabs.tabs'
 ]
 
 # Add any paths that contain templates here, relative to this directory.
