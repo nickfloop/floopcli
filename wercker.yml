@@ -1,8 +1,3 @@
-services:
-    - name: device0
-      id: forwardloop/floop-debian-jessie-ssh-sudo 
-    - name: device1
-      id: forwardloop/floop-debian-jessie-ssh-sudo 
 box:
     id: forwardloop/floop-host-debian-jessie-python36-dockermachine 
 build:
