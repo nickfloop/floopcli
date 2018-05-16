@@ -10,14 +10,15 @@ floop is a command-line interface built on Python 3. The tool uses Docker, Docke
 
 Supported Operating Systems
 ===========================
+
+Check out the :doc:`os` to learn more about how to configure the operating systems on your target devices to enable floop.
+
 floop currently supports operating systems that have a bash shell and support virtualization. These include:
 
 - Ubuntu (tested 16.04)
 
 Install Prerequisites
 =====================
-Install `Docker <https://docs.docker.com/install/>`_
-    Docker is the foundation for Docker Machine. floop uses Docker to handle all code push, build, run, and test interactions between your host and your target devices.
 Install `Docker Machine <https://docs.docker.com/machine/install-machine/>`_
     Docker Machine builds virtual operating system environments on remote servers. floop uses Docker Machine to establish network communication between the host and your targets. During build, run, and test phases for development, Docker Machine handles all SSH authentication and in-transit encryption between host and targets.
 Install `rsync <https://git.samba.org/rsync.git>`_

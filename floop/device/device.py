@@ -275,6 +275,13 @@ def create(device: Device, check: bool=True) -> None:
             outd = device.run_ssh_command('pwd', check=check)
             __log(device, 'info', outd)
     except SystemCallException as e:
+        force_destroy_command = '{0} rm -f {1}'.format(device.docker_machine_bin, device.name)
+        __log(device, 
+                'error',
+                'Cleaning up failed docker machine: {}'.format(
+                    force_destroy_command))
+        out = syscall(force_destroy_command, check=False)
+        __log(device, 'error', out)
         __log(device, 'error', str(e))
         raise DeviceCreateException(str(e))
 
@@ -388,13 +395,9 @@ def run(device: Device,
     try:
         out = device.run_ssh_command(command=rm_command, check=check, verbose=verbose)
         __log(device, 'info', out)
-    except SystemCallException as e:
-        __log(device, 'error', str(e))
-        raise DeviceCommunicationException(str(e))
-    run_command = 'docker run --name floop -v {}:/floop/ floop'.format(
-            target_directory)
-    __log(device, 'info', run_command)
-    try:
+        run_command = 'docker run --name floop -v {}:/floop/ floop'.format(
+                target_directory)
+        __log(device, 'info', run_command)
         out = device.run_ssh_command(command=run_command, check=check, verbose=verbose)
         __log(device, 'info', out)
     except SystemCallException as e:
@@ -422,6 +425,7 @@ def ps(device: Device,
     try:
         out = device.run_ssh_command(ps_command, check=check)
         __log(device, 'info', out)
+    # TODO: find a case where device initializes but ps fails
     except SystemCallException as e:
         __log(device, 'error', str(e))
         raise DevicePSException(str(e))
@@ -456,14 +460,14 @@ def test(device: Device,
         __log(device, 'error', 'Test file not found: {}'.format(test_file))
         raise DeviceTestFileNotFound(test_file)
     push(device=device, source_directory=source_directory, target_directory=target_directory)
-    rm_command = 'docker rm -f flooptest || true'
-    __log(device, 'info', rm_command)
-    out = device.run_ssh_command(rm_command, check=check)
-    __log(device, 'info', out)
-    test_build_command = 'docker build -t flooptest -f {}/{} {}'.format(
-            target_directory, test_file.split('/')[-1], target_directory)
-    __log(device, 'info', test_build_command)
     try:
+        rm_command = 'docker rm -f flooptest || true'
+        __log(device, 'info', rm_command)
+        out = device.run_ssh_command(rm_command, check=check)
+        __log(device, 'info', out)
+        test_build_command = 'docker build -t flooptest -f {}/{} {}'.format(
+                target_directory, test_file.split('/')[-1], target_directory)
+        __log(device, 'info', test_build_command)
         out = device.run_ssh_command(test_build_command, check=check)
         __log(device, 'info', out)
         test_run_command = 'docker run --name flooptest -v {}:/floop/ flooptest'.format(
@@ -493,18 +497,28 @@ def destroy(device: Device,
         :py:class:`floop.device.device.DeviceDestroyException`:
             destroy commands returned non-zero exit code
     '''
-    # TODO: delete source directory and rsync to clean up all device code
     try:
-        uninstall_docker_command = 'sudo apt-get purge -y docker-ce'
-        __log(device, 'info', uninstall_docker_command)
-        out = device.run_ssh_command(command=uninstall_docker_command, check=check)
-        __log(device, 'info', out)
-        rm_target_source = 'rm -rf {}'.format(target_directory)
-        out = device.run_ssh_command(command=rm_target_source, check=check)
-        __log(device, 'info', out)
-        rm_device = '{} rm -f {}'.format(device.docker_machine_bin, device.name)
-        out = syscall(rm_device, check=check)
-        __log(device, 'info', out)
+        # can call docker-machine ssh commands or syscall commands 
+        rm_target_source = ('ssh', 'rm -rf {}'.format(target_directory))
+        uninstall_docker = ('ssh', 'sudo apt-get purge -y docker-ce || true')
+        rm_device = ('sys', '{} rm -f {}'.format(
+            device.docker_machine_bin, device.name))
+        # order matters
+        commands = [
+                rm_target_source,
+                uninstall_docker,
+                rm_device
+                ]
+        for command in commands:
+            kind, command = command
+            __log(device, 'info', command)
+            if kind == 'ssh':
+                out = device.run_ssh_command(command=command, check=check)
+                __log(device, 'info', out)
+            elif kind =='sys':
+                out = syscall(command=command, check=check)
+                __log(device, 'info', out)
+    # TODO: find a case where init succeeds but destroy fails, enforce idempotency
     except SystemCallException as e:
         __log(device, 'error', str(e))
         raise DeviceDestroyException(str(e))

@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+import os
 import boto3
 from datetime import datetime
 from config import AWS_CONFIG, LAMBDA_CONFIG
@@ -7,6 +9,16 @@ from shutil import make_archive
 from uuid import getnode as get_mac
 
 def get_client(service):
+    '''
+    Convenient wrapper for boto3 AWS service client
+
+    Args:
+        service (str):
+            name of AWS service for which to get client
+    Returns:
+        (boto3.client):
+            authenticated client for service
+    '''
     return boto3.client(
         service_name = service,
         region_name = os.environ['AWS_DEFAULT_REGION'], 
@@ -15,6 +27,9 @@ def get_client(service):
     )
 
 class LambdaUnknownException(Exception):
+    '''
+    Catch-all error for Lambda function create, update, and/or code upload
+    '''
     pass
 
 class Lambda(object):
@@ -23,6 +38,29 @@ class Lambda(object):
 
     Args:
         AWS_CONFIG (dict):
+            configuration for AWS as a whole. Expects the following keys:
+                account_id:
+                    AWS account id
+                region:
+                    AWS region for the Lambda function
+        LAMBDA_CONFIG (dict):
+            configuration for Lambda function itself. Expects the following keys:
+                function_name:
+                    name of the function to create or update
+                src_dir:
+                    path of directory that contains Lambda function
+                zip_archive:
+                    path/name of zip archive to produce for code in src_dir
+                role:
+                    name of AWS role with permission to create/update/upload
+                    code to the Lambda function
+                runtime:
+                    name of Lamba runtime (usually 'python3.6')
+                handler:
+                    name of function in src_dir code to run as main
+                expect_failure:
+                    for testing, can set expect_failure to True to suppress
+                    some errors and test downstream errors more easily
     '''
     def __init__(self, AWS_CONFIG=AWS_CONFIG, LAMBDA_CONFIG=LAMBDA_CONFIG):
         self.client = get_client('lambda')
@@ -149,7 +187,9 @@ class Lambda(object):
             Payload = b'{}',
             Qualifier = function_alias 
         )
-        function_error = invoke_response['FunctionError'] == 'Unhandled'
+        function_error = False 
+        if 'FunctionError' in invoke_response:
+            function_error = invoke_response['FunctionError'] == 'Unhandled'
         if (function_error and self.LAMBDA_CONFIG['expect_failure']) or not function_error:
             self.cprint('[SUCCESS] Tested λ function (alias): {} ({})'.format(
                 self.LAMBDA_CONFIG['function_name'], function_alias), termcolor.GREEN)

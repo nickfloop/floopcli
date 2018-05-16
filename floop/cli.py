@@ -19,7 +19,7 @@ from floop.device.device import build, create, destroy, ps, push, run, test, \
         DeviceTestException, \
         DeviceCommunicationException, \
         DevicePSException
-from .config import Config, ConfigFileDoesNotExist, SourceDirectoryDoesNotExist, MalformedConfigException, UnmetHostDependencyException
+from .config import Config, ConfigFileDoesNotExist, SourceDirectoryDoesNotExist, MalformedConfigException, UnmetHostDependencyException, RedundantDeviceConfigException
 
 _FLOOP_CONFIG_DEFAULT_FILE = './floop.json'
 
@@ -151,6 +151,12 @@ class FloopCLI(object):
 \tMake a new host_source_directory and define it in config file\n\
 \tChange host_source_directory in config file to a valid filepath\n\
 \tMake sure you have permission to access the files in host_source_directory'''.format(config_file))
+        except RedundantDeviceConfigException as e:
+            exit('''Error| Redundant address or name for devices in config: {} in {}\n\n\
+\tOptions to fix this error:\n\
+\t--------------------------\n\
+\tEdit config file so all device names and addresses are unique\n\
+'''.format(str(e), config_file))
         except MalformedConfigException:
             exit('''Error| Config file is malformed: {}\n\n\
 \tOptions to fix this error:\n\

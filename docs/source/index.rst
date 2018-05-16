@@ -12,14 +12,6 @@ Floop |version| Documentation
 
 floop is a CLI tool for developing, building, and testing code on multiple target devices using a single host device. Currently, the tool works for Linux targets, including many ARM devices.
 
-Get Involved
-============
-Join our alpha test!
-    Learn more at the `Forward Loop website <https://www.forward-loop.com>`_
-
-See the source, report issues, suggest features
-    On Github
-
 Get Started
 ============
 :doc:`intro/overview`
@@ -27,6 +19,9 @@ Get Started
 
 :doc:`intro/install`
     Install floop on your host machine
+
+:doc:`intro/os`
+    Configure your target operating systems to work with floop
 
 :doc:`intro/hello`
     Run a Hello, World! example with floop
@@ -38,6 +33,14 @@ Use Floop with Your Code
 
 :doc:`intro/best`
     Best practice for working with floop
+
+Get Involved
+============
+Join our alpha test!
+    Learn more at the `Forward Loop website <https://www.forward-loop.com>`_
+
+See the source, report issues, suggest features
+    On Github
 
 API Documentation 
 =================

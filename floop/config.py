@@ -9,15 +9,14 @@ from floop.device.device import Device
 # default config to write when using floop config 
 _FLOOP_CONFIG_DEFAULT_CONFIGURATION = {
     'device_target_directory' : '/home/floop/floop/',
-    'host_rsync_bin' : which('rsync'),
-    'host_docker_bin' : which('docker'),
-    'host_docker_machine_bin' : which('docker-machine'),
     'host_source_directory' : './src/',
+    'host_rsync_bin' : which('rsync'),
+    'host_docker_machine_bin' : which('docker-machine'),
     'devices' : [{
-        'address' : '192.168.1.122',
-        'name' : 'floop0',
-        'ssh_key' : '~/.ssh/id_rsa',
-        'user' : 'floop'
+        'address' : '192.168.1.100', # e.g. 192.168.1.100
+        'name' : 'floop0',           # e.g. floop0
+        'ssh_key' : '~/.ssh/id_rsa', # e.g. ~/.ssh/id_rsa
+        'user' : 'floop'             # e.g. floop
         },]
 }
 
@@ -60,6 +59,12 @@ class TargetBuildFileDoesNotExist(Exception):
 class UnmetHostDependencyException(Exception):
     '''
     Provided dependency binary path does not exist
+    '''
+    pass
+
+class RedundantDeviceConfigException(Exception):
+    '''
+    At least one device in the config has a redundant name or address 
     '''
     pass
 
@@ -107,11 +112,17 @@ class Config(object):
         if len(set(config_keys).intersection(_FLOOP_CONFIG_DEFAULT_CONFIGURATION.keys())) != \
                 len(_FLOOP_CONFIG_DEFAULT_CONFIGURATION.keys()):
             raise MalformedConfigException(config_keys) 
+        addresses = []
+        names = []
         for device in value['devices']:
             if len(set(device.keys()).intersection(
                 _FLOOP_CONFIG_DEFAULT_CONFIGURATION['devices'][0].keys())) != \
                     len(_FLOOP_CONFIG_DEFAULT_CONFIGURATION['devices'][0].keys()):
                 raise MalformedConfigException(config_keys) 
+            if device['address'] in addresses or device['name'] in names:
+                raise RedundantDeviceConfigException(device['name'])
+            addresses.append(device['address'])
+            names.append(device['name'])
         self.__config = value
 
     def parse(self):
