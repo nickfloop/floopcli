@@ -3,15 +3,15 @@ import json
 import logging
 
 from pkg_resources import require, DistributionNotFound
-from sys import argv, exit, modules
+from sys import argv, exit, modules, _getframe
 from shutil import copyfile
+from socket import gethostname
 from functools import partial
 from os.path import isfile, dirname, expanduser, abspath
 from os import makedirs, remove 
 from multiprocessing import Pool
 from platform import system
 from time import time
-from floop.util.termcolor import termcolor, cprint 
 from floop.device.device import build, create, destroy, ps, push, run, test, \
         DeviceSourceDirectoryNotFound, \
         DeviceBuildException, \
@@ -20,6 +20,8 @@ from floop.device.device import build, create, destroy, ps, push, run, test, \
         DeviceCommunicationException, \
         DevicePSException
 from .config import Config, ConfigFileDoesNotExist, SourceDirectoryDoesNotExist, MalformedConfigException, UnmetHostDependencyException, RedundantDeviceConfigException
+
+logger = logging.getLogger(__name__)
 
 _FLOOP_CONFIG_DEFAULT_FILE = './floop.json'
 
@@ -52,6 +54,7 @@ def quiet():
     If the -v flag is absent, then call quiet() inside of the method.
     '''
     log = logging.getLogger()
+    # need to loop over current index of all handlers to prevent race condition
     for handler in log.handlers[:]:
         if handler.name == 'console':
             log.removeHandler(handler)
@@ -87,6 +90,8 @@ class FloopCLI(object):
                     version = require('floop-cli')[0].version
                     print(version)
                     exit(0)
+                # TODO: test in an environment where floop executable exists
+                # but floop-cli pip package is no longer installed
                 except DistributionNotFound:
                     exit('''Error| pip package "floop-cli" is not installed\n\n
 \tOptions to fix this error:\n\
@@ -98,6 +103,7 @@ class FloopCLI(object):
         parser.add_argument('command', help='Subcommand to run')
         config_file = _FLOOP_CONFIG_DEFAULT_FILE
         try:
+            # the index of the CLI call where the commands start
             self.command_index = 2
             if len(argv) > 3:
                 if argv[1] not in ['-c', '-config-file']:
@@ -106,6 +112,8 @@ class FloopCLI(object):
                     args = parser.parse_args(argv[1:4])
                 if 'config' in argv and args.config_file:
                     raise IncompatibleCommandLineOptions('-c and config')
+                if 'logs' in argv and args.config_file:
+                    raise IncompatibleCommandLineOptions('-c and logs')
                 if args.config_file:
                     config_file = args.config_file
                     self.command_index = 4 
@@ -118,8 +126,12 @@ class FloopCLI(object):
                 parser.print_help()
                 exit(1)
             if not hasattr(self, args.command):
-                exit('Unknown floop command: {}'.format(args.command))
-            if args.command != 'config':
+                exit('''Error| Unknown floop command: {}\n\n
+\tOptions to fix this error:\n\
+\t--------------------------\n\
+\tTo see supported commands, run floop with no command: floop\n\
+'''.format(args.command))
+            if args.command not in ['config', 'logs']:
                 floop_config = Config(
                         config_file=config_file).validate()
                 self.config = floop_config.config
@@ -205,21 +217,23 @@ class FloopCLI(object):
 \tTry to re-create the target device: floop create\n\
 ''')
 
-    def __cprint(self, string, color=termcolor.DEFAULT):
+    def __log(self, level, message):
         '''
-        Wrapper for internal color print
+        Wrapper for logging CLI methods that do not interact with targets
 
         Args:
-            string (str): 
-                string to print
-            color (str):
-                terminal color name
+            level (str):
+                logger logging level (only use 'info' or 'error')
+            message (str):
+                message to log
+                
         '''
-        cprint(
-            string=string,
-            color=color,
-            time=True,
-            tag='floop')
+        if hasattr(logger, level):
+            message = '{} (host) - {}: {}'.format(
+                    gethostname(), 
+                    _getframe(1).f_code.co_name, # calling function name
+                    message)
+            getattr(logger, level)(message)
 
     def config(self):
         '''
@@ -231,9 +245,8 @@ class FloopCLI(object):
                 help='Overwrite configuration file with defaults',
                 action='store_true')
         args = parser.parse_args(argv[2:])
-        self.__cprint('Configure...')
         if isfile(_FLOOP_CONFIG_DEFAULT_FILE):
-            self.__cprint('Configuration file already exists: {}'.format(
+            self.__log('info', 'Configuration file already exists: {}'.format(
                 _FLOOP_CONFIG_DEFAULT_FILE
                 )
             )
@@ -242,13 +255,16 @@ class FloopCLI(object):
                 return
             backup_file = '{}.backup-{}'.format(_FLOOP_CONFIG_DEFAULT_FILE, time())
             copyfile(_FLOOP_CONFIG_DEFAULT_FILE, backup_file)
-            self.__cprint('Copied existing config file {} to backup file: {}'.format(
+            self.__log('info', 
+                    'Copied existing config file {} to backup file: {}'.format(
                 _FLOOP_CONFIG_DEFAULT_FILE, backup_file))
         makedirs(dirname(_FLOOP_CONFIG_DEFAULT_FILE),
                 exist_ok=True)
         with open(_FLOOP_CONFIG_DEFAULT_FILE, 'w') as c:
             json.dump(Config(_FLOOP_CONFIG_DEFAULT_FILE).default_config, c)
-        self.__cprint('Wrote default configuration to file: {}'.format(
+        self.__log(
+                'info',
+                'Wrote default configuration to file: {}'.format(
             _FLOOP_CONFIG_DEFAULT_FILE
             )
         )
@@ -281,7 +297,6 @@ class FloopCLI(object):
         args = parser.parse_args(argv[self.command_index:])
         if not args.verbose:
             quiet()
-        print('ps...')
         with Pool() as pool:
             pool.map(ps, self.devices)
      
@@ -300,7 +315,6 @@ class FloopCLI(object):
         args = parser.parse_args(argv[self.command_index:])
         if not args.verbose:
             quiet()
-        print('logs...')
         with open('floop.log') as log:
             for line in log.readlines():
                 if args.match is not None:
@@ -326,7 +340,6 @@ class FloopCLI(object):
         args = parser.parse_args(argv[self.command_index:])
         if not args.verbose:
             quiet()
-        print('push...')
         with Pool() as pool:
             pool.map(
                     partial(push,
@@ -351,7 +364,6 @@ class FloopCLI(object):
         args = parser.parse_args(argv[self.command_index:])
         if not args.verbose:
             quiet()
-        print('build...')
         #self.push()
         with Pool() as pool:
             pool.map(
@@ -377,7 +389,6 @@ class FloopCLI(object):
         args = parser.parse_args(argv[self.command_index:])
         if not args.verbose:
             quiet()
-        print('run...')
         with Pool()as pool:
             pool.map(
                     partial(run,
@@ -402,8 +413,6 @@ class FloopCLI(object):
         args = parser.parse_args(argv[self.command_index:])
         if not args.verbose:
             quiet()
-        print('test...')
-        test_command = 'docker build'
         with Pool()as pool:
             pool.map(
                     partial(test,
@@ -425,6 +434,8 @@ class FloopCLI(object):
         args = parser.parse_args(argv[self.command_index:])
         if not args.verbose:
             quiet()
-        print('clean...')
         with Pool() as pool:
-            pool.map(destroy, self.devices)
+            pool.map(
+                partial(
+                    destroy, target_directory=self.target_directory),
+                    self.devices)

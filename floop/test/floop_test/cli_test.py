@@ -7,7 +7,7 @@ from os.path import isfile
 from itertools import combinations
 
 from floop.util.syscall import syscall, SystemCallException
-from floop.test.floop_test.fixture import fixture_valid_config_file
+from floop.test.floop_test.fixture import * 
 
 @pytest.fixture(scope='function')
 def fixture_unknown_cli_commands():
@@ -21,8 +21,7 @@ def fixture_unknown_cli_commands():
 
 @pytest.fixture(scope='function')
 def fixture_cli_base(request):
-    test_config_file = fixture_valid_config_file(request)
-    return ['floop', 'floop -c {}'.format(test_config_file)]
+    return ['floop', 'floop -c floop.json']#.format(test_config_file)]
 
 @pytest.fixture(scope='function')
 def fixture_cli_base_nonexistent_config_file():
@@ -31,15 +30,13 @@ def fixture_cli_base_nonexistent_config_file():
 @pytest.fixture(scope='module')
 def fixture_supported_cli_commands():
     return {
-            #'config' : [],
-            'create' : [],
-            'ps' : [],
-            'push' : [],
-            'build' : [],
-            'run' : [],
-            'logs' : [],
-            'test' : []
-            #'clean' : []
+            'create' : ['-v'],
+            'ps' : ['-v'],
+            'push' : ['-v'],
+            'build' : ['-v'],
+            'run' : ['-v'],
+            'logs' : ['-v'],
+            'test' : ['-v']
             }
 
 @pytest.fixture(scope='function')
@@ -64,7 +61,6 @@ def fixture_malformed_floop_configs(request):
     for idx, key in enumerate(sorted(valid_config.keys())):
         config = copy(valid_config)
         del config[key]
-        print(config)
         config_file = config_files[idx]
         with open(config_file, 'w') as cf:
             json.dump(config, cf)
@@ -87,21 +83,23 @@ def fixture_nonexistent_source_dir_config(request):
         json.dump(invalid_config, cf)
     return config_file 
 
-def test_cli_bases_fail(fixture_cli_base):
+
+@pytest.fixture(scope='function')
+def fixture_cleanup_config(request):
+    config_file = 'floop.json'
+    def cleanup():
+        if isfile(config_file):
+            remove(config_file)
+    request.addfinalizer(config_file)
+    return config_file
+
+def test_cli_version():
+    syscall('floop --version', check=True)
+
+def test_cli_bases_fail(fixture_cli_base, fixture_valid_config_file):
     for base in fixture_cli_base:
         with pytest.raises(SystemCallException):
             syscall(base, check=True)
-
-def test_cli_commands_with_flags(fixture_cli_base, fixture_supported_cli_commands):
-    for base in fixture_cli_base:
-        for command, flags in fixture_supported_cli_commands.items():
-            for i in range(1, len(flags)+1):
-                for combo in combinations(flags, i):
-                    combo = ' '.join(list(combo))
-                    sys_string = '{} {} {}'.format(base, command, combo)
-                    print(sys_string)
-                    syscall(sys_string, check=True)
-
 
 def test_cli_commands_nonexistent_source_dir_fails(fixture_nonexistent_source_dir_config, fixture_supported_cli_commands):
     for command in fixture_supported_cli_commands.keys():
@@ -127,20 +125,129 @@ def test_incompatible_cli_commands_fail(fixture_incompatible_cli_commands):
         with pytest.raises(SystemCallException):
             syscall(command, check=True)
 
-def test_cli_unknown_commands_fail(fixture_cli_base, fixture_unknown_cli_commands):
+def test_cli_unknown_commands_fail(fixture_cli_base, fixture_valid_config_file, fixture_unknown_cli_commands):
     for base in fixture_cli_base:
         for command in fixture_unknown_cli_commands:
             with pytest.raises(SystemCallException):
                 syscall('{} {}'.format(base, command), check=True)
 
-def test_cli_commands_no_flags(fixture_cli_base, fixture_supported_cli_commands):
-    for base in fixture_cli_base:
-        for command in fixture_supported_cli_commands.keys():
-            sys_string = '{} {}'.format(base, command)
-            print(sys_string)
-            syscall(sys_string, check=True)
 
-def test_cli_config_overwrite():
-    syscall('floop config', check=True)
-    syscall('floop config', check=True)
-    syscall('floop config --overwrite', check=True)
+class TestConfig():
+    '''
+    Config does not act on devices, so separate tests from device-bound methods
+    '''
+    def test_cli_config_overwrite(fixture_cleanup_config):
+        syscall('floop config', check=True)
+        syscall('floop config', check=True)
+        syscall('floop config --overwrite', check=True)
+
+class TestCreate():
+    def test_cli_create(self, fixture_cli_base, fixture_valid_config_file):
+        for base in fixture_cli_base:
+            syscall('{} create'.format(base), check=True)
+
+    def test_cli_create_nonexistent_config_file_fails(self):
+        with pytest.raises(SystemCallException):
+            syscall('floop create', check=True)
+        with pytest.raises(SystemCallException):
+            syscall('floop create -v', check=True)
+
+class TestPS():
+    def test_cli_ps(self, fixture_cli_base, fixture_valid_config_file):
+        for base in fixture_cli_base:
+            syscall('{} ps'.format(base), check=True)
+            syscall('{} ps -v'.format(base), check=True)
+
+    def test_cli_ps_nonexistent_config_file_fails(self):
+        with pytest.raises(SystemCallException):
+            syscall('floop ps', check=True)
+        with pytest.raises(SystemCallException):
+            syscall('floop ps -v', check=True)
+
+class TestLogs():
+    def test_cli_logs(self, fixture_cli_base, fixture_valid_config_file):
+        for base in fixture_cli_base:
+            syscall('{} logs'.format(base), check=True)
+            syscall('{} logs -m test'.format(base), check=True)
+            syscall('{} logs -v'.format(base), check=True)
+            syscall('{} logs -v -m test'.format(base), check=True)
+
+    def test_cli_logs_nonexistent_config_file_fails(self):
+        with pytest.raises(SystemCallException):
+            syscall('floop logs', check=True)
+        with pytest.raises(SystemCallException):
+            syscall('floop logs -v', check=True)
+
+class TestPush():
+    def test_cli_push(self, fixture_cli_base, fixture_valid_config_file):
+        for base in fixture_cli_base:
+            syscall('{} push'.format(base), check=True)
+            syscall('{} push -v'.format(base), check=True)
+
+    def test_cli_push_nonexistent_config_file_fails(self):
+        with pytest.raises(SystemCallException):
+            syscall('floop push', check=True)
+        with pytest.raises(SystemCallException):
+            syscall('floop push -v', check=True)
+
+class TestBuild():
+    def test_cli_build(self, fixture_cli_base,
+            fixture_valid_config_file,
+            fixture_buildfile):
+        for base in fixture_cli_base:
+            syscall('{} build'.format(base), check=True)
+            syscall('{} build -v'.format(base), check=True)
+
+    def test_cli_build_nonexistent_config_file_fails(self, fixture_cli_base):
+        for base in fixture_cli_base:
+            with pytest.raises(SystemCallException):
+                syscall('{} build'.format(base), check=True)
+            with pytest.raises(SystemCallException):
+                syscall('{} build -v'.format(base), check=True)
+
+class TestRun():
+    def test_cli_run(self, fixture_cli_base,
+            fixture_valid_config_file,
+            fixture_buildfile):
+        for base in fixture_cli_base:
+            syscall('{} run'.format(base), check=True)
+            syscall('{} run -v'.format(base), check=True)
+
+    def test_cli_run_nonexistent_config_file_fails(self, fixture_cli_base):
+        for base in fixture_cli_base:
+            with pytest.raises(SystemCallException):
+                syscall('{} run'.format(base), check=True)
+            with pytest.raises(SystemCallException):
+                syscall('{} run -v'.format(base), check=True)
+
+class TestTest():
+    def test_cli_test(self, fixture_cli_base,
+            fixture_valid_config_file,
+            fixture_testfile):
+        for base in fixture_cli_base:
+            syscall('{} test'.format(base), check=True)
+            syscall('{} test -v'.format(base), check=True)
+
+    def test_cli_test_nonexistent_config_file_fails(self, fixture_cli_base):
+        for base in fixture_cli_base:
+            with pytest.raises(SystemCallException):
+                syscall('{} test'.format(base), check=True)
+            with pytest.raises(SystemCallException):
+                syscall('{} test -v'.format(base), check=True)
+
+class TestDestroy():
+    def test_cli_destroy(self, fixture_cli_base,
+            fixture_valid_config_file,
+            fixture_docker_machine_wrapper):
+        enforce_docker_machine = fixture_docker_machine_wrapper
+        for base in fixture_cli_base:
+            enforce_docker_machine()
+            syscall('{} destroy'.format(base), check=False)
+            enforce_docker_machine()
+            syscall('{} destroy -v'.format(base), check=False)
+
+    def test_cli_destroy_nonexistent_config_file_fails(self, fixture_cli_base):
+        with pytest.raises(SystemCallException):
+            for base in fixture_cli_base:
+                syscall('{} destroy'.format(base), check=True)
+                syscall('{} destroy -v'.format(base), check=True)

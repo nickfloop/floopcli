@@ -235,7 +235,7 @@ def __log(device: Device, level: str, message: str) -> None:
             message to log
     '''
     if hasattr(logger, level):
-        message = '{} - {}: {}'.format(
+        message = '{} (target) - {}: {}'.format(
                 device.name,
                 sys._getframe(1).f_code.co_name,
                 message)

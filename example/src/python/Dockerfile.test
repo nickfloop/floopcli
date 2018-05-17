@@ -1,0 +1,5 @@
+FROM library/python:3.6
+RUN pip install pytest 
+# by default, target source code will be at /floop/
+# on the target device run environment
+CMD ["pytest", "/floop"]

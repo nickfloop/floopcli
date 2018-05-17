@@ -96,6 +96,7 @@ class Config(object):
             if key.endswith('_bin'):
                 if val is None:
                     dependency_name = key.replace('_bin', '')
+                    # TODO: test in an environment with unmet dependencies
                     raise UnmetHostDependencyException(dependency_name)
         return self
 
@@ -129,8 +130,7 @@ class Config(object):
         # TODO: check that device names are unique
         if not isdir(self.config['host_source_directory']):
             raise SourceDirectoryDoesNotExist(
-                    self.config['host_source_directory']
-                  )
+                    self.config['host_source_directory'])
         source_directory = self.config['host_source_directory']
         target_directory = self.config['device_target_directory']
         docker_machine_bin = self.config['host_docker_machine_bin']
