@@ -12,14 +12,18 @@ from os import makedirs, remove
 from multiprocessing import Pool
 from platform import system
 from time import time
-from floop.device.device import build, create, destroy, ps, push, run, test, \
-        DeviceSourceDirectoryNotFound, \
-        DeviceBuildException, \
-        DeviceRunException, \
-        DeviceTestException, \
-        DeviceCommunicationException, \
-        DevicePSException
-from .config import Config, ConfigFileDoesNotExist, SourceDirectoryDoesNotExist, MalformedConfigException, UnmetHostDependencyException, RedundantDeviceConfigException
+from floop.iot.core import build, create, destroy, ps, push, run, test, \
+        CoreSourceNotFound, \
+        CoreBuildException, \
+        CoreRunException, \
+        CoreTestException, \
+        CoreCommunicationException, \
+        CorePSException
+from .config import Config, \
+        ConfigFileDoesNotExist, \
+        MalformedConfigException, \
+        UnmetHostDependencyException, \
+        RedundantCoreConfigException
 
 logger = logging.getLogger(__name__)
 
@@ -73,8 +77,8 @@ class FloopCLI(object):
             filepath of source code directory on host
         target_directory (str):
             filepath of source code directory on target (must be fullpath)
-        devices ([:py:class:`floop.device.device.Device`]):
-            list of devices defined in configuration file 
+        cores ([:py:class:`floop.core.core.Core`]):
+            list of cores defined in configuration file 
     '''
     def __init__(self):
         parser = argparse.ArgumentParser(description='Floop CLI tool',
@@ -133,9 +137,10 @@ class FloopCLI(object):
 '''.format(args.command))
             if args.command not in ['config', 'logs']:
                 floop_config = Config(
-                        config_file=config_file).validate()
+                        config_file=config_file).read()
+                # only pull this for logging/error message reporting
                 self.config = floop_config.config
-                self.devices, self.source_directory, self.target_directory = floop_config.parse()
+                self.cores = floop_config.parse()
             # this runs the method matching the CLI argument
             getattr(self, args.command)()
         # all CLI stdout/stderr output should come from here
@@ -156,18 +161,19 @@ class FloopCLI(object):
 \tGenerate a default config file by running: floop config\n\
 \tUse the -c flag to point to a non-default config file: floop -c your-config-file.json'.format(
     config_file, _FLOOP_CONFIG_DEFAULT_FILE))
-        except (SourceDirectoryDoesNotExist, DeviceSourceDirectoryNotFound):
-            exit('''Error| Cannot find host_source_directory in config file: {}\n\n\
+        # maintain this though it doesn't run just in case 
+        except CoreSourceNotFound:
+            exit('''Error| Cannot find host_source in config file: {}\n\n\
 \tOptions to fix this error:\n\
 \t--------------------------\n\
-\tMake a new host_source_directory and define it in config file\n\
-\tChange host_source_directory in config file to a valid filepath\n\
-\tMake sure you have permission to access the files in host_source_directory'''.format(config_file))
-        except RedundantDeviceConfigException as e:
-            exit('''Error| Redundant address or name for devices in config: {} in {}\n\n\
+\tMake a new host_source and define it in config file\n\
+\tChange host_source in config file to a valid filepath\n\
+\tMake sure you have permission to access the files in host_source'''.format(config_file))
+        except RedundantCoreConfigException as e:
+            exit('''Error| Redundant address or name for cores in config: {} in {}\n\n\
 \tOptions to fix this error:\n\
 \t--------------------------\n\
-\tEdit config file so all device names and addresses are unique\n\
+\tEdit config file so all core names and addresses are unique\n\
 '''.format(str(e), config_file))
         except MalformedConfigException:
             exit('''Error| Config file is malformed: {}\n\n\
@@ -183,38 +189,38 @@ class FloopCLI(object):
 \t--------------------------\n\
 \tInstall dependency for your operating system\n\
 '''.format(str(e)))
-        except DeviceBuildException as e:
-            exit('''Error| Build on target device returned non-zero error\n\n\
+        except CoreBuildException as e:
+            exit('''Error| Build on target core returned non-zero error\n\n\
 \tOptions to fix this error:\n\
 \t--------------------------\n\
-\tCheck floop logs for this device: floop logs -m device-name\n\
+\tCheck floop logs for this core: floop logs -m core-name\n\
 ''')
-        except DeviceRunException as e:
-            exit('''Error| Run on target device returned non-zero error\n\n\
+        except CoreRunException as e:
+            exit('''Error| Run on target core returned non-zero error\n\n\
 \tOptions to fix this error:\n\
 \t--------------------------\n\
-\tCheck floop logs for this device: floop logs -m device-name\n\
+\tCheck floop logs for this core: floop logs -m core-name\n\
 ''')
-        except DeviceTestException as e:
-            exit('''Error| Test on target device returned non-zero error\n\n\
+        except CoreTestException as e:
+            exit('''Error| Test on target core returned non-zero error\n\n\
 \tOptions to fix this error:\n\
 \t--------------------------\n\
-\tCheck floop logs for this device: floop logs -m device-name\n\
+\tCheck floop logs for this core: floop logs -m core-name\n\
 ''')
-        except DeviceCommunicationException as e:
-            exit('''Error| Communication with target device returned non-zero error\n\n\
+        except CoreCommunicationException as e:
+            exit('''Error| Communication with target core returned non-zero error\n\n\
 \tOptions to fix this error:\n\
 \t--------------------------\n\
 \tCheck that you have Internet access from the host\n\
-\tCheck that the device is still accessible at the address in your config file\n\
+\tCheck that the core is still accessible at the address in your config file\n\
 ''')
-        except DevicePSException as e:
-            exit('''Error| ps on target device returned non-zero error\n\n\
+        except CorePSException as e:
+            exit('''Error| ps on target core returned non-zero error\n\n\
 \tOptions to fix this error:\n\
 \t--------------------------\n\
 \tCheck that you have Internet access from the host\n\
-\tCheck that the device is still accessible at the address in your config file\n\
-\tTry to re-create the target device: floop create\n\
+\tCheck that the core is still accessible at the address in your config file\n\
+\tTry to re-create the target core: floop create\n\
 ''')
 
     def __log(self, level, message):
@@ -261,6 +267,7 @@ class FloopCLI(object):
         makedirs(dirname(_FLOOP_CONFIG_DEFAULT_FILE),
                 exist_ok=True)
         with open(_FLOOP_CONFIG_DEFAULT_FILE, 'w') as c:
+            # using the default_config attribute is kind of a hack
             json.dump(Config(_FLOOP_CONFIG_DEFAULT_FILE).default_config, c)
         self.__log(
                 'info',
@@ -271,10 +278,10 @@ class FloopCLI(object):
 
     def create(self):
         '''
-        Create new Docker Machines for each device in the configuration
+        Create new Docker Machines for each core in the configuration
         '''
         parser = argparse.ArgumentParser(
-                description='Initialize single project communication between host and device(s)')
+                description='Initialize single project communication between host and core(s)')
         parser.add_argument('-v', '--verbose',
                 help='Print system commands and results to stdout',
                 action='store_true')
@@ -282,7 +289,7 @@ class FloopCLI(object):
         if not args.verbose:
             quiet()
         with Pool() as pool:
-            pool.map(create, self.devices)
+            pool.map(create, self.cores)
 
     def ps(self):
         '''
@@ -290,7 +297,7 @@ class FloopCLI(object):
         '''
         # TODO: add metrics command to get resource usage info AND process info
         parser = argparse.ArgumentParser(
-                description='List all initiated device(s)')
+                description='List all initiated core(s)')
         parser.add_argument('-v', '--verbose',
                 help='Print system commands and results to stdout',
                 action='store_true')
@@ -298,7 +305,7 @@ class FloopCLI(object):
         if not args.verbose:
             quiet()
         with Pool() as pool:
-            pool.map(ps, self.devices)
+            pool.map(ps, self.cores)
      
     def logs(self):
         '''
@@ -306,7 +313,7 @@ class FloopCLI(object):
         '''
         # TODO: add -f option (bonus if it's pipe-able)
         parser = argparse.ArgumentParser(
-                description='Logs from initialized device(s)')
+                description='Logs from initialized core(s)')
         parser.add_argument('-v', '--verbose',
                 help='Print system commands and results to stdout',
                 action='store_true')
@@ -333,7 +340,7 @@ class FloopCLI(object):
         '''
         # TODO: add .floopignore ?
         parser = argparse.ArgumentParser(
-                description='Push code from host to device(s)')
+                description='Push code from host to core(s)')
         parser.add_argument('-v', '--verbose',
                 help='Print system commands and results to stdout',
                 action='store_true')
@@ -341,11 +348,7 @@ class FloopCLI(object):
         if not args.verbose:
             quiet()
         with Pool() as pool:
-            pool.map(
-                    partial(push,
-                        source_directory=self.source_directory,
-                        target_directory=self.target_directory),
-                    self.devices)
+            pool.map(push, self.cores)
 
     def build(self):
         '''
@@ -357,7 +360,7 @@ class FloopCLI(object):
         '''
         # TODO: add -v command to tee build outputs to logs AND local stdout
         parser = argparse.ArgumentParser(
-                description='Build code on device(s)')
+                description='Build code on core(s)')
         parser.add_argument('-v', '--verbose',
                 help='Print system commands and results to stdout',
                 action='store_true')
@@ -366,11 +369,7 @@ class FloopCLI(object):
             quiet()
         #self.push()
         with Pool() as pool:
-            pool.map(
-                    partial(build,
-                        source_directory=self.source_directory,
-                        target_directory=self.target_directory),
-                    self.devices)
+            pool.map(build, self.cores)
 
     def run(self):
         '''
@@ -382,7 +381,7 @@ class FloopCLI(object):
         '''
         # TODO: add -v command to tee build outputs to logs AND local stdout
         parser = argparse.ArgumentParser(
-                description='Run code on device(s)')
+                description='Run code on core(s)')
         parser.add_argument('-v', '--verbose',
                 help='Print system commands and results to stdout',
                 action='store_true')
@@ -390,11 +389,7 @@ class FloopCLI(object):
         if not args.verbose:
             quiet()
         with Pool()as pool:
-            pool.map(
-                    partial(run,
-                        source_directory=self.source_directory,
-                        target_directory=self.target_directory),
-                    self.devices)
+            pool.map(run, self.cores)
                 
     def test(self):
         '''
@@ -404,9 +399,8 @@ class FloopCLI(object):
         in order to ensure that the host and targets
         have the same code.
         '''
-        # TODO: check that test YAML exists
         parser = argparse.ArgumentParser(
-                description='Test code on device(s)')
+                description='Test code on core(s)')
         parser.add_argument('-v', '--verbose',
                 help='Print system commands and results to stdout',
                 action='store_true')
@@ -414,11 +408,7 @@ class FloopCLI(object):
         if not args.verbose:
             quiet()
         with Pool()as pool:
-            pool.map(
-                    partial(test,
-                        source_directory=self.source_directory,
-                        target_directory=self.target_directory),
-                    self.devices)
+            pool.map(test, self.cores)
 
     def destroy(self):
         '''
@@ -427,7 +417,7 @@ class FloopCLI(object):
         Does not remove local source code, builds, test, or logs.
         '''
         parser = argparse.ArgumentParser(
-                description='Destroy project, code, and environment on device(s) but not host')
+                description='Destroy project, code, and environment on core(s) but not host')
         parser.add_argument('-v', '--verbose',
                 help='Print system commands and results to stdout',
                 action='store_true')
@@ -435,7 +425,4 @@ class FloopCLI(object):
         if not args.verbose:
             quiet()
         with Pool() as pool:
-            pool.map(
-                partial(
-                    destroy, target_directory=self.target_directory),
-                    self.devices)
+            pool.map(destroy, self.cores)

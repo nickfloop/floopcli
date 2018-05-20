@@ -2,23 +2,55 @@ import json
 from time import time
 from os import rename
 from os.path import isdir, isfile
-from pathlib import Path
 from shutil import which
-from floop.device.device import Device
+from floop.iot.core import Core 
 
 # default config to write when using floop config 
 _FLOOP_CONFIG_DEFAULT_CONFIGURATION = {
-    'device_target_directory' : '/home/floop/floop/',
-    'host_source_directory' : './src/',
-    'host_rsync_bin' : which('rsync'),
-    'host_docker_machine_bin' : which('docker-machine'),
-    'devices' : [{
-        'address' : '192.168.1.100', # e.g. 192.168.1.100
-        'name' : 'floop0',           # e.g. floop0
-        'ssh_key' : '~/.ssh/id_rsa', # e.g. ~/.ssh/id_rsa
-        'user' : 'floop'             # e.g. floop
-        },]
+    'groups' : {
+        'default': { 
+            'host_rsync_bin' : which('rsync'),
+            'host_docker_machine_bin' : which('docker-machine'),
+        },
+        'group0' :{
+            'cores' : {
+                'default': {
+                    'host_source' : './src/'
+                },
+                'core0' : {
+                    'target_source' : '/home/floop/floop/',
+                    'address' : '192.168.1.100', 
+                    'user' : 'floop',             
+                    'host_key' : '~/.ssh/id_rsa', 
+                    'devices' : []
+                }
+            }
+        }
+    },
 }
+
+def _flatten(config):
+    flat_config = []
+    try:
+        default = config['groups']['default']
+        for group, gval in config['groups'].items():
+            if group != 'default':
+                group_default = gval['cores']['default']
+                for core, dval in gval['cores'].items():
+                    if core != 'default':
+                        core_config = default
+                        for key, val in group_default.items():
+                            core_config[key] = val
+                        for key, val in dval.items():
+                            core_config[key] = val
+                        core_config['group'] = group
+                        core_config['core'] = core
+                        assert(core_config['address'])
+                        flat_config.append(core_config)
+        return flat_config
+    # forces config to have default groups and cores
+    except (TypeError, KeyError) as e:
+        raise MalformedConfigException(str(e))
 
 class CannotSetImmutableAttributeException(Exception):
     '''
@@ -32,15 +64,9 @@ class MalformedConfigException(Exception):
     '''
     pass
 
-class MalformedDeviceConfigException(Exception):
+class MalformedCoreConfigException(Exception):
     '''
-    At least one device in provided config did not have all expected keys
-    '''
-    pass
-
-class SourceDirectoryDoesNotExist(Exception):
-    '''
-    Provided config "host_source_directory" does not exist
+    At least one core in provided config did not have all expected keys
     '''
     pass
 
@@ -62,9 +88,9 @@ class UnmetHostDependencyException(Exception):
     '''
     pass
 
-class RedundantDeviceConfigException(Exception):
+class RedundantCoreConfigException(Exception):
     '''
-    At least one device in the config has a redundant name or address 
+    At least one core in the config has a redundant name or address 
     '''
     pass
 
@@ -77,7 +103,7 @@ def _read_json(json_file):
             Path to json file
     Returns:
         dict:
-            dictionary of .json file content
+            dictionary of json file content
     '''
     with open(json_file) as j:
         return json.load(j)
@@ -86,19 +112,6 @@ class Config(object):
     def __init__(self, config_file):
         self.default_config = _FLOOP_CONFIG_DEFAULT_CONFIGURATION 
         self.config_file = config_file
-    
-    def validate(self):
-        config_file = self.config_file
-        if not isfile(config_file):
-            raise ConfigFileDoesNotExist(config_file)
-        self.config = _read_json(config_file)
-        for key, val in self.config.items():
-            if key.endswith('_bin'):
-                if val is None:
-                    dependency_name = key.replace('_bin', '')
-                    # TODO: test in an environment with unmet dependencies
-                    raise UnmetHostDependencyException(dependency_name)
-        return self
 
     @property
     def config(self):
@@ -108,36 +121,41 @@ class Config(object):
     def config(self, value):
         if hasattr(self, 'config'):
             raise CannotSetImmutableAttributeException('config')
-        config_keys = sorted(list(value.keys()))
-        # extra keys will be ignored
-        if len(set(config_keys).intersection(_FLOOP_CONFIG_DEFAULT_CONFIGURATION.keys())) != \
-                len(_FLOOP_CONFIG_DEFAULT_CONFIGURATION.keys()):
-            raise MalformedConfigException(config_keys) 
-        addresses = []
-        names = []
-        for device in value['devices']:
-            if len(set(device.keys()).intersection(
-                _FLOOP_CONFIG_DEFAULT_CONFIGURATION['devices'][0].keys())) != \
-                    len(_FLOOP_CONFIG_DEFAULT_CONFIGURATION['devices'][0].keys()):
-                raise MalformedConfigException(config_keys) 
-            if device['address'] in addresses or device['name'] in names:
-                raise RedundantDeviceConfigException(device['name'])
-            addresses.append(device['address'])
-            names.append(device['name'])
         self.__config = value
 
+    def read(self):
+        config_file = self.config_file
+        if not isfile(config_file):
+            raise ConfigFileDoesNotExist(config_file)
+        raw_config = _read_json(config_file)
+        # throws malformed errors
+        config = _flatten(raw_config)
+        addresses = []
+        for core in config:
+            if core['address'] in addresses:
+                raise RedundantCoreConfigException(core['address'])
+            addresses.append(core['address'])
+        self.config = config
+        return self
+
     def parse(self):
-        # TODO: check that device names are unique
-        if not isdir(self.config['host_source_directory']):
-            raise SourceDirectoryDoesNotExist(
-                    self.config['host_source_directory'])
-        source_directory = self.config['host_source_directory']
-        target_directory = self.config['device_target_directory']
-        docker_machine_bin = self.config['host_docker_machine_bin']
-        devices = []
-        for device in self.config['devices']:
-            devices.append(
-                Device(
-                    docker_machine_bin=docker_machine_bin,
-                    **device))
-        return devices, source_directory, target_directory
+        # only handle dependency checking
+        # let core handle host and target checking to prevent race
+        for core in self.config:
+            for key, val in core.items():
+                if key.endswith('_bin'):
+                    if not isfile(val):
+                        err = 'Dependency {} not found at {}'.format(
+                                key.replace('bin_'), val)
+                        # TODO: test in an environment with unmet dependencies
+                        raise UnmetHostDependencyException(err)
+        cores = []
+        for core in self.config:
+            try:
+                cores.append(Core(**core))
+            except TypeError as e:
+                missing_key = str(e).split(' ')[-1]
+                err = '{} (core) has no {} (property)'.format(
+                        core['core'], missing_key)
+                raise MalformedConfigException(err)
+        return cores

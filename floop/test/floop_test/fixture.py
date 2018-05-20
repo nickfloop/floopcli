@@ -15,11 +15,19 @@ FLOOP_TEST_CONFIG_FILE = './floop.json'
 
 FLOOP_TEST_CONFIG = _FLOOP_CONFIG_DEFAULT_CONFIGURATION
 
-_TEST_DEVICE_NAME = 'test0'
+_TEST_DEVICE_NAME = 'core0'
 
 _DEVICE_TEST_SRC_DIRECTORY = '{}/src/'.format(dirname(
     abspath(__file__))
     )
+
+@pytest.fixture(scope='module')
+def fixture_docker_machine_bin():
+    return which('docker-machine') 
+
+@pytest.fixture(scope='module')
+def fixture_rsync_bin():
+    return which('rsync') 
 
 @pytest.fixture(scope='function')
 def fixture_default_config_file(request):
@@ -52,21 +60,20 @@ def fixture_valid_docker_machine():
         syscall(create_local_machine, check=False)
 
 @pytest.fixture(scope='function')
-def fixture_docker_machine_wrapper():
-    def method():
-        fixture_valid_docker_machine
-    return method
-
-@pytest.fixture(scope='function')
-def fixture_valid_device_config():
+def fixture_valid_core_config(request):
     if environ.get('FLOOP_LOCAL_HARDWARE_TEST'):
         pass
     elif environ.get('FLOOP_CLOUD_TEST'):
         pass
     else: 
         return {'address' : '192.168.1.100',
-                'name' : _TEST_DEVICE_NAME, 
-                'ssh_key' :  '~/.ssh/id_rsa', 
+                'target_source' : '/home/floop/floop/',
+                'group' : 'group0',
+                'host_docker_machine_bin' : fixture_docker_machine_bin(), 
+                'host_key' :  '~/.ssh/id_rsa', 
+                'host_rsync_bin' : fixture_rsync_bin(),
+                'host_source' : fixture_valid_src_directory(request),
+                'core' : _TEST_DEVICE_NAME, 
                 'user' : 'floop'}
 
 @pytest.fixture(scope='function')
@@ -77,18 +84,46 @@ def fixture_valid_config_file(request):
         pass
     else: 
         src_dir = fixture_valid_src_directory(request)
-        device_config = fixture_valid_device_config()
         config_file = fixture_default_config_file(request)
         with open(config_file, 'r') as cf:
             data = json.load(cf)
-        data['devices'] = [device_config]
-        data['host_source_directory'] = src_dir
+        data['groups']['group0']['cores']['default']['host_source'] = src_dir
         with open(config_file, 'w') as cf:
             json.dump(data, cf)
         return config_file
 
 #
 #
+
+@pytest.fixture(scope='function')
+def fixture_malformed_config_file(request):
+    config_file = fixture_valid_config_file(request)
+    with open(config_file, 'r') as cf:
+        data = json.load(cf)
+    data['groups'] = {}
+    with open(config_file, 'w') as cf:
+        json.dump(data, cf)
+    return config_file
+
+@pytest.fixture(scope='function')
+def fixture_incomplete_config_file(request):
+    config_file = fixture_valid_config_file(request)
+    with open(config_file, 'r') as cf:
+        data = json.load(cf)
+    data['groups'] = {
+            'default' : {},
+            'group0' : {
+                'cores' : {
+                    'default' : {},
+                    'core0' : {},
+                }
+            }
+        }
+    with open(config_file, 'w') as cf:
+        json.dump(data, cf)
+    return config_file
+
+
 
 @pytest.fixture(scope='function')
 def fixture_valid_src_directory(request):
@@ -102,22 +137,19 @@ def fixture_valid_src_directory(request):
     request.addfinalizer(cleanup)
     return src_dir
 
-@pytest.fixture(scope='module')
-def fixture_docker_machine_bin():
-    return which('docker-machine') 
 
-@pytest.fixture(scope='function')
-def fixture_invalid_device_configs():
-    config = fixture_valid_device_config()
-    invalid_items = {'address' : '192.168.1.1222222',
-            'user' : 'definitelyanunauthorizeduser'}
-    configs = []
-    for key, val in invalid_items.items():
-        invalid_config = copy(config)
-        invalid_config['name'] = 'thisshouldfail'
-        invalid_config[key] = val
-        configs.append(invalid_config)
-    return configs 
+#@pytest.fixture(scope='function')
+#def fixture_invalid_core_configs():
+#    config = fixture_valid_core_config()
+#    invalid_items = {'address' : '192.168.1.1222222',
+#            'user' : 'definitelyanunauthorizeduser'}
+#    configs = []
+#    for key, val in invalid_items.items():
+#        invalid_config = copy(config)
+#        invalid_config['name'] = 'thisshouldfail'
+#        invalid_config[key] = val
+#        configs.append(invalid_config)
+#    return configs 
 
 @pytest.fixture(scope='function')
 def fixture_valid_target_directory():
@@ -172,5 +204,34 @@ CMD ["apt-get", "update"]'''
     with open(buildfile, 'w') as tf:
         tf.write(buildfile_contents)
     return src_dir
+
+@pytest.fixture(scope='function')
+def fixture_redundant_config_file(request):
+    config_file = fixture_valid_config_file(request)
+    with open(config_file, 'r') as cf:
+        data = json.load(cf)
+    core_config = data['groups']['group0']['cores']['core0']
+    default_config = data['groups']['group0']['cores']['default']
+    data['groups']['group0']['cores'] = {
+            'default' : default_config, 
+            'core0' : core_config, 'core1' : core_config}
+    with open(config_file, 'w') as cf:
+        json.dump(data, cf)
+    return config_file
+
+@pytest.fixture(scope='function')
+def fixture_missing_property_config_file(request):
+    config_file = fixture_valid_config_file(request)
+    with open(config_file, 'r') as cf:
+        data = json.load(cf)
+    core_config = data['groups']['group0']['cores']['core0']
+    del core_config['user']
+    default_config = data['groups']['group0']['cores']['default']
+    data['groups']['group0']['cores'] = {
+            'default' : default_config, 
+            'core0' : core_config}
+    with open(config_file, 'w') as cf:
+        json.dump(data, cf)
+    return config_file
 
 
