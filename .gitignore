@@ -1,7 +1,10 @@
 **/*.egg-info 
 **/*.sh 
+**/*.pyc
+**/*.zip
 **/__pycache__*
 build/ 
+build/
 dist/
 bin/
 floop-cli/
@@ -19,3 +22,5 @@ docker.key
 create_test/
 test_test/
 floop.log
+floop.json
+floop.json*

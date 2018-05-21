@@ -4,6 +4,7 @@ from os import rename
 from os.path import isdir, isfile
 from shutil import which
 from floop.iot.core import Core 
+from typing import Any, Dict, List
 
 # default config to write when using floop config 
 _FLOOP_CONFIG_DEFAULT_CONFIGURATION = {
@@ -28,7 +29,18 @@ _FLOOP_CONFIG_DEFAULT_CONFIGURATION = {
     },
 }
 
-def _flatten(config):
+def _flatten(config : dict) -> List[dict]:
+    '''
+    Flatten floop configuration
+
+    Args:
+        config (dict):
+            config dictionary 
+
+    Raises:
+        :py:class:`MalformedConfigException`:
+            config has no default group, default core, and/or core address
+    '''
     flat_config = []
     try:
         default = config['groups']['default']
@@ -50,9 +62,6 @@ def _flatten(config):
     # forces config to have default groups and cores
     except (TypeError, KeyError) as e:
         raise MalformedConfigException(str(e))
-
-if __name__ == '__main__':
-    print(_flatten(_FLOOP_CONFIG_DEFAULT_CONFIGURATION))
 
 class CannotSetImmutableAttributeException(Exception):
     '''
@@ -96,7 +105,7 @@ class RedundantCoreConfigException(Exception):
     '''
     pass
 
-def _read_json(json_file):
+def _read_json(json_file : str) -> dict:
     '''
     Convenient wrapper for reading .json file into dict
 
@@ -111,28 +120,42 @@ def _read_json(json_file):
         return json.load(j)
 
 class Config(object):
-    def __init__(self, config_file):
+    def __init__(self, config_file : str) -> None:
         self.default_config = _FLOOP_CONFIG_DEFAULT_CONFIGURATION 
         self.config_file = config_file
 
     @property
-    def config(self):
+    def config(self) -> List[Dict[str, Any]]:
+        '''
+        Flattened configuration read from file
+        '''
         return self.__config
 
     @config.setter
-    def config(self, value):
+    def config(self, value : List[Dict[str, Any]]) -> None:
         if hasattr(self, 'config'):
             raise CannotSetImmutableAttributeException('config')
         self.__config = value
 
-    def read(self):
+    def read(self) -> Config:
+        '''
+        Read configuration file
+
+        Raises:
+            :py:class:`ConfigFileDoesNotExist`:
+                configuration file does not exist
+
+        Returns:
+            :py:class:`floop.config.Config`:
+                configuration object with config attribute
+        '''
         config_file = self.config_file
-        if not isfile(config_file):
+        if not isfile(config_file) or config_file is None:
             raise ConfigFileDoesNotExist(config_file)
         raw_config = _read_json(config_file)
         # throws malformed errors
         config = _flatten(raw_config)
-        addresses = []
+        addresses = [] #type: List[str]
         for core in config:
             if core['address'] in addresses:
                 raise RedundantCoreConfigException(core['address'])
@@ -140,15 +163,28 @@ class Config(object):
         self.config = config
         return self
 
-    def parse(self):
+    def parse(self) -> List[Core]:
+        '''
+        Parse configuration into list of cores
+
+        Raises:
+            :py:class:`floop.config.UnmetHostDependencyException`:
+                rsync and/or docker-machine binary path does not exist
+            :py:class:`floop.config.MalformedConfigException`:
+                configuration is missing keys expected by :py:class:`floop.iot.core.Core`
+
+        Returns:
+            [:py:class:`floop.iot.core.Core`]:
+                list of cores defined in config
+        '''
         # only handle dependency checking
         # let core handle host and target checking to prevent race
         for core in self.config:
             for key, val in core.items():
                 if key.endswith('_bin'):
-                    if not isfile(val):
+                    if not isfile(val) or val is None:
                         err = 'Dependency {} not found at {}'.format(
-                                key.replace('bin_'), val)
+                                key.replace('_bin', ''), val)
                         # TODO: test in an environment with unmet dependencies
                         raise UnmetHostDependencyException(err)
         cores = []

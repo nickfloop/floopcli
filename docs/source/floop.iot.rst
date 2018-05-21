@@ -4,10 +4,10 @@ floop.device package
 Submodules
 ----------
 
-floop.device.device module
+floop.iot.core module
 --------------------------
 
-.. automodule:: floop.device.device
+.. automodule:: floop.iot.core
     :members:
     :undoc-members:
     :show-inheritance:
@@ -16,7 +16,7 @@ floop.device.device module
 Module contents
 ---------------
 
-.. automodule:: floop.device
+.. automodule:: floop.iot
     :members:
     :undoc-members:
     :show-inheritance:

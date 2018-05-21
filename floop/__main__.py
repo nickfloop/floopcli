@@ -4,7 +4,7 @@ from .cli import FloopCLI
 
 logger = logging.getLogger(__name__)
 
-def main():
+def main() -> None:
     import logging.config
     import yaml
 

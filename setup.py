@@ -36,6 +36,7 @@ setup(
             'mypy==0.590',
             'pytest==3.5.1',
             'pytest-cov==2.5.1',
+            'pyyaml==3.12',
             'sphinx==1.7.4',
             'sphinx-tabs==1.1.7'
             ],  

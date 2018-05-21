@@ -307,7 +307,7 @@ If you see any errors, follow the help messages that floop provides. Make sure t
 
 6. Push Code from Host to Targets
 =================================
-Once you have successfully created one or more floop cores, you can push code from your configured *host_source_directory* to *core_target_directory* by running:
+Once you have successfully created one or more floop cores, you can push code from your configured *host_source* to *target_source* by running:
 ::
 
   floop push
@@ -385,7 +385,7 @@ When you are finished with this guide, you can destroy all the floop cores defin
 
 :subscript:`(Note: floop destroys floop resources on all target cores and frees resources on the host. It does NOT remove your project or source from your host.)`
 
-Optionally, you can add the *-v* flag to see that floop destroys cores by removing the *core_target_directory* from all targets, uninstalling Docker from all targets, and removing Docker Machines from the host.
+Optionally, you can add the *-v* flag to see that floop destroys cores by removing the *target_source* from all targets, uninstalling Docker from all targets, and removing Docker Machines from the host.
 
 If you followed this guide using more than one ARM core or Docker Machine, you may only want to destroy some of the floop cores you created before. In order to do this, you can remove all of the cores you want to destroy from your **floop.json** and add them to a new configuration file called **floop-destroy.json**. You can then destroy those cores using the *-c* flag for the floop command by running:
 ::

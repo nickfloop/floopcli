@@ -64,7 +64,15 @@ def fixture_valid_core_config(request):
     if environ.get('FLOOP_LOCAL_HARDWARE_TEST'):
         pass
     elif environ.get('FLOOP_CLOUD_TEST'):
-        pass
+        return {'address' : '192.168.1.100',
+                'target_source' : '/home/floop/floop/',
+                'group' : 'group0',
+                'host_docker_machine_bin' : fixture_docker_machine_bin(), 
+                'host_key' :  '~/.ssh/id_rsa', 
+                'host_rsync_bin' : fixture_rsync_bin(),
+                'host_source' : fixture_valid_src_directory(request),
+                'core' : _TEST_DEVICE_NAME, 
+                'user' : 'floop'}
     else: 
         return {'address' : '192.168.1.100',
                 'target_source' : '/home/floop/floop/',

@@ -26,11 +26,6 @@ Get Started
 :doc:`intro/hello`
     Run a Hello, World! example with floop
 
-Use Floop with Your Code
-========================
-:doc:`intro/setup`
-    Set up floop for your project 
-
 :doc:`intro/best`
     Best practice for working with floop
 

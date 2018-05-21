@@ -36,9 +36,7 @@ def test_core_init_nonexistent_ssh_key_fails(fixture_valid_core_config):
     config = fixture_valid_core_config
     config['host_key'] = '/definitely/not/a/valid/ssh/key'
     with pytest.raises(SSHKeyNotFound):
-        Core(
-            docker_machine_bin=fixture_docker_machine_bin,
-            **fixture_valid_core_config)
+        Core(**fixture_valid_core_config)
 
 def test_core_set_attributes_after_init_fails(fixture_valid_core_config):
     core = Core(**fixture_valid_core_config)

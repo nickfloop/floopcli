@@ -115,7 +115,7 @@ class Core(object):
             host_source: str,
             core: str,
             user: str,
-            **kwargs) -> None:
+            **kwargs: str) -> None:
 
         self.address = address
         '''Core IP address (reachable by SSH)'''
@@ -199,7 +199,7 @@ class Core(object):
         value = expanduser(value)
         if hasattr(self, 'host_key'):
             raise CannotSetImmutableAttribute('host_key')
-        if not isfile(value):
+        if not isfile(value) or value is None:
             raise SSHKeyNotFound(value)
         self.__host_key = value
 
@@ -342,8 +342,8 @@ def create(core: Core, check: bool=True) -> None:
                 'error',
                 'Cleaning up failed docker machine: {}'.format(
                     force_destroy_command))
-        out = syscall(force_destroy_command, check=False)
-        __log(core, 'error', out)
+        out, err = syscall(force_destroy_command, check=False)
+        __log(core, 'error', str((out, err)))
         __log(core, 'error', str(e))
         raise CoreCreateException(str(e))
 
@@ -405,7 +405,7 @@ def build(core: Core, check: bool=True) -> None:
     '''
 
     build_file = '{}/Dockerfile'.format(core.host_source)
-    if not isfile(build_file):
+    if not isfile(build_file) or build_file is None:
         __log(core, 'error', 'Core build file not found: {}'.format(build_file))
         raise CoreBuildFileNotFound(build_file)
     push(core)
@@ -502,7 +502,7 @@ def test(core: Core,
             test commands returned non-zero exit code
     '''
     test_file = '{}/Dockerfile.test'.format(core.host_source)
-    if not isfile(test_file):
+    if not isfile(test_file) or test_file is None:
         __log(core, 'error', 'Test file not found: {}'.format(test_file))
         raise CoreTestFileNotFound(test_file)
     push(core)
@@ -554,15 +554,15 @@ def destroy(core: Core,
                 uninstall_docker,
                 rm_core
                 ]
-        for command in commands:
-            kind, command = command
+        for command_ in commands:
+            kind, command = command_
             __log(core, 'info', command)
             if kind == 'ssh':
                 out = core.run_ssh_command(command=command, check=check)
                 __log(core, 'info', out)
             elif kind =='sys':
-                out = syscall(command=command, check=check)
-                __log(core, 'info', out)
+                out, err = syscall(command=command, check=check)
+                __log(core, 'info', str((out, err)))
     # TODO: find a case where init succeeds but destroy fails, enforce idempotency
     except SystemCallException as e:
         __log(core, 'error', str(e))

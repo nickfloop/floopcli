@@ -20,15 +20,6 @@ floop.util.syscall module
     :undoc-members:
     :show-inheritance:
 
-floop.util.termcolor module
----------------------------
-
-.. automodule:: floop.util.termcolor
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-
 Module contents
 ---------------
 

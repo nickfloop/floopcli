@@ -77,16 +77,19 @@ base=https://github.com/docker/machine/releases/download/v0.14.0 &&\
 {} &\
 wait
 
+# check static typing
+mypy --ignore-missing-imports --disallow-untyped-defs floop/
+
 # run pytest on floop-cli, set cloud test env variable to true
-FLOOP_CLOUD_TEST=true pytest --cov-report term-missing --cov=floop -v -s -x floop
+#FLOOP_CLOUD_TEST=true pytest --cov-report term-missing --cov=floop -v -s -x floop
 
 # no matter what happens, call cleanup
 trap cleanup EXIT ERR INT TERM'''.format(
-        'test0',
-        'test1',
+        'core0',
+        'core1',
         os.environ['SSH_KEY'],
-        docker_machine_string('test0'),
-        docker_machine_string('test1')
+        docker_machine_string('core0'),
+        docker_machine_string('core1')
     )
 
     print(init_script)
