@@ -9,7 +9,7 @@ floop is a tool for standardizing code development between a host device and one
 
 When to Use Floop
 =================
-floop is designed to work with target devices that run an operating system (as opposed to firmware devices), such as Ubuntu, Debian, Raspbian, or Armbian. The tool is mainly for developers who want to develop code using their normal workflow and then test that same code on a wide range of devices all at the same time. 
+floop is designed to work with target devices that run an operating system such as Ubuntu, Debian, Raspbian, or Armbian. The tool is mainly for developers who want to develop code using their normal workflow and then test that same code on a wide range of devices all at the same time. 
 
 Currently, floop does not support firmware-based devices. floop looks to support the next generation of OS-based edge computing devices, such as Orange Pi, Raspberry Pi, BeagleBone Black, and NanoPi NEO. Over time we may start to add support for common firmware-based devices such as ESP8266 and STM32. 
 

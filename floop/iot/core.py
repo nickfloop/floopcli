@@ -368,6 +368,7 @@ def push(core: Core, check: bool=True) -> None:
     '''
     # prevents race condition where source exists at start of floop
     # call but gets removed before push 
+    # TODO: simulate the race condition
     if not isdir(core.host_source):
         __log(core, 'error', 'Source not found: {}'.format(core.host_source))
         raise CoreSourceNotFound(core.host_source)

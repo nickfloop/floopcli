@@ -13,18 +13,18 @@ In this guide, you will try out all of the floop commands. In order to do so, yo
     - develop a simple Hello, World! app and tests in one of several languages 
     - define simple test and production environments using `Dockerfiles <https://docs.docker.com/engine/reference/builder/>`_
     - **configure** floop with the app
-    - **create** floop target devices that handle communication with your real hardware targets
-    - **push** source code from your host device to target devices
-    - **build** code on target devices
-    - **test** code on target devices in a test operating system environment on the target
-    - **run** code on target devices in a production operating system environment on the target
-    - **monitor** running or testing environments on target devices
+    - **create** floop target cores that handle communication with your real hardware targets
+    - **push** source code from your host core to target cores
+    - **build** code on target cores
+    - **test** code on target cores in a test operating system environment on the target
+    - **run** code on target cores in a production operating system environment on the target
+    - **monitor** running or testing environments on target cores
     - **log** all events to the host 
-    - **destroy** floop devices and reclaim resources on all target devices
+    - **destroy** floop cores and reclaim resources on all target cores
 
-In the end, each target device should greet you with "Hello, World!"
+In the end, each target core should greet you with "Hello, World!"
 
-If you have Linux-based target devices, you can use them for this guide. Otherwise, follow along to see how to use Docker Machines on your host to run and test floop using just your computer.
+If you have Linux-based target cores, you can use them for this guide. Otherwise, follow along to see how to use Docker Machines on your host to run and test floop using just your computer.
 
 Prerequisites
 ==============
@@ -32,16 +32,16 @@ At least one of the following:
 
 .. tabs::
 
-    .. tab:: ARM Devices 
+    .. tab:: ARM Cores 
 
-        This is the option for using floop with real devices.
+        This is the option for using floop with real cores.
 
-        You can use one or more ARM devices running a Linux-based operating system with `kernel version 3.10+ <https://docs.docker.com/engine/faq/#how-far-do-docker-containers-scale>`_. For example, `Orange Pi Zero <http://www.orangepi.org/orangepizero/>`_ running `Armbian <https://www.armbian.com/orange-pi-zero/>`_ mainline kernel.
-            If you use target hardware, please make sure the operating system on each device follows the :ref:`intro-os`. 
+        You can use one or more ARM cores running a Linux-based operating system with `kernel version 3.10+ <https://docs.docker.com/engine/faq/#how-far-do-docker-containers-scale>`_. For example, `Orange Pi Zero <http://www.orangepi.org/orangepizero/>`_ running `Armbian <https://www.armbian.com/orange-pi-zero/>`_ mainline kernel.
+            If you use target hardware, please make sure the operating system on each core follows the :ref:`intro-os`. 
 
     .. tab:: Docker Machines 
 
-        This is the option for testing or evaluating floop before you use it with real devices.
+        This is the option for testing or evaluating floop before you use it with real cores.
 
         You can use one or more Docker Machines running on your host. To see how to do this, check the `Docker Machine Tutorial <https://docs.docker.com/machine/get-started/>`_ for how to run local Docker Machines using Virtualbox. Once you install Docker Machine and local machine dependencies, you can typically start a new machine as follows: 
 
@@ -51,16 +51,16 @@ At least one of the following:
           docker-machine create \
           --driver virtualbox \
           --virtualbox-memory 1024 \
-          floop0
+          core0
 
-        That creates a new Docker Machine called *floop0* with 1GB of virtual memory.
+        That creates a new Docker Machine called *core0* with 1GB of virtual memory.
 
         When you are finished, you can clean up as follows:
         ::
           #!/bin/bash
-          docker-machine rm -f floop0
+          docker-machine rm -f core0
 
-        If you want to test floop with multiple local devices, you can use the procedure above to make new devices and name them whatever you want, removing them when you are finished.
+        If you want to test floop with multiple local cores, you can use the procedure above to make new cores and name them whatever you want, removing them when you are finished.
       
 
 1. Install Floop
@@ -151,7 +151,7 @@ We now have a simple app. In order to test and to run this app, we need to defin
 ==========================================
 We need to define a test and a run environment so we can run our tests to make sure that the code will work during deployment and then run the production code. For this purpose, floop uses Docker to create runtime environments with all dependencies and code installed as needed.  
 
-Both the test and run environments will run inside a virtual operating system on your target devices. This standardizes your test and production environments across devices, despite different underlying hardware and operating systems installed on that hardware.
+Both the test and run environments will run inside a virtual operating system on your target cores. This standardizes your test and production environments across cores, despite different underlying hardware and operating systems installed on that hardware.
 
 Since testing often requires different dependencies and run behavior than a production environment, we will need one environment build file to test and another to run. 
 
@@ -217,9 +217,9 @@ Since testing often requires different dependencies and run behavior than a prod
 
 4. Configure the App with Floop
 ===============================
-floop reads all project configuration from a single JSON configuration file. This configuration defines the details of source code, device network addresses, and initial authentication details.
+floop reads all project configuration from a single JSON configuration file. This configuration defines the details of source code, core network addresses, and initial authentication details.
 
-We will use floop in order to generate a default configuration template and then modify that template to match our device and network configuration.
+We will use floop in order to generate a default configuration template and then modify that template to match our core and network configuration.
 
 From within the **project** folder, run:
 ::
@@ -230,65 +230,84 @@ This will generate a default configuration called **floop.json**.
 This configuration is based on the following default values (this is a Python dictionary that gets written to JSON):
 
 .. literalinclude:: ../../../floop/config.py
-    :lines: 10-21
+    :lines: 9-29
 
 :subscript:`(Note: The calls to the *which* function automatically set the path of docker-machine and rsync as they are installed on your system. If needed, you can edit floop.json to set the paths to each binary dependency. This may be useful if you need to use a different version of docker-machine or rsync than the default version for your system.)`
 
-floop looks for source code on your host computer at *host_source_directory*. You can change the value to point to the relative path of your source code from the **floop.json** file. For the purposes of this guide, the default **./src** should work if you run floop from the **project** directory.
+From this we can describe the default configuration in plain language. All groups use the same rsync and docker-machine binaries. We define one group called *group0*. All cores in *group0* look to the *host_source* directory as their source code directory on the host. Within *group0* there is one core called *core0* that we can reach at its *address* using SSH access via the *user* and *host_key* on the host. When using floop, the *host_source* for *group0* will be pushed to *target_source* on *core0*. Currently, *core0* has no *cores*.
 
+floop uses a compact configuration format that defines *default* key-values for groups and cores. A **group** is a collection of **cores**. A **core** runs an operating system (not firmware). floop automatically flattens the configuration file as follows:
+    - *default* key-values for **groups** become key-values for all groups
+    - *default* key-values for **cores** become key-values for all cores in a group
+    - key-values for specific cores overwrite key-values defined as *default* (for example, if you define *host_source* within *core0* then that will overwrite the *host_source* defined in *default*)
 
-When you run floop, it will automatically copy code from *host_source_directory* to *device_target_directory* on each target. For this guide, you should change *device_target_directory* depending on whether you are using Docker Machines on your host or hardware ARM devices.
+You must always define *default* for groups and cores, even if these objects are empty. Each group must have one or more cores.
+
+Applying the flattening procedure to the default configuration reveals that it defines a single core called *core0* that belongs to the group *group0*. The flattened configuration is:
+::
+    [
+        {
+            'cores': [], 
+            'host_source': './src/', 
+            'core': 'core0', 
+            'address': '192.168.1.100', 
+            'host_docker_machine_bin': '/usr/local/bin/docker-machine', 
+            'host_key': '~/.ssh/id_rsa', 
+            'group': 'group0', 
+            'target_source': '/home/floop/floop/', 
+            'host_rsync_bin': '/usr/bin/rsync', 
+            'user': 'floop'
+        }
+    ]
+
+The flattened configuration will be a list with as many items as cores. You can add more cores by modifying the configuration file.
+
+When you run floop, it will automatically copy code from *host_source* to *target_source* on each target. For this guide, you should change *target_source* depending on whether you are using Docker Machines on your host or hardware ARM cores.
 
 .. tabs::
 
-    .. tab:: ARM Devices 
+    .. tab:: ARM Cores 
 
-        This is the option for using floop with real devices.
+        This is the option for using floop with real cores.
 
-        For ARM devices, you need to update each entry in *devices*. For example, if you have a target device that you want to call *test0* that can be reached at IP address **192.168.188** and that device runs an operating system that has a user called *ubuntu* who uses **~/.ssh/floop.key** to SSH into your device, then you would configure floop as follows:
-
+        For ARM cores, you need to update each entry in *cores*. For example, if you have a target core that you want to call *core0* that can be reached at IP address **192.168.188** and that core runs an operating system that has a user called *ubuntu* (with corresponding user directory **/home/ubuntu/**) who uses **~/.ssh/floop.key** to SSH into your core, then you would configure floop as follows:
         ::
+          ... # only showing core0 
+          "core0" : {
+              "target_source' : '/home/ubuntu/floop/",
+              "address' : '192.168.1.188", 
+              "user' : 'ubuntu",             
+              "host_key' : '~/.ssh/floop.key", 
+          } 
 
-          ... # only showing non-default key-values
-            'device_target_directory' : '/home/ubuntu/floop/',
-            'devices' : [{
-                  'address' : '192.168.1.188', 
-                  'name' : 'test0',           
-                  'ssh_key' : '~/.ssh/floop.key',
-                  'user' : 'ubuntu'             
-                },]
-            }
-
-        If you have more than one ARM device, then make sure to add entries to the *devices* list, changing the values to match the address, name, key, and operating system user for your specific device.
-
-        For ARM devices, addresses should be unique.
+        If you have more than one ARM core, then make sure to add entries to the *cores* list, changing the values to match your specific core.
 
     .. tab:: Docker Machines 
 
-        This is the option for testing or evaluating floop before you use it with real devices.
+        This is the option for testing or evaluating floop before you use it with real cores.
 
-        For Docker Machines on the host, if you have one existing Docker Machine called *floop0* then the default configuration should work for you. If you have more than one Docker Machine, then you should add more devices to the configuration, changing the value of *name* to the names you used when you created the devices. Note that floop will ignore all keys except for *name* if you use existing Docker Machines. To see existing Docker Machines on your host, use docker-machine directly to list them:
+        For Docker Machines on the host, if you have one existing Docker Machine called *core0* then the default configuration should work for you. If you have more than one Docker Machine, then you should add more cores to the configuration, changing the name to match the name you used when you created the cores using Docker Machine. To see existing Docker Machines on your host, use docker-machine directly to list them:
         ::
 
           docker-machine ls
 
-Note that all device names must be unique. 
+Note that all core names and addresses must be unique. 
 
-5. Create Floop Target Devices
+5. Create Floop Target Cores
 ==============================
 
-Once you have a configuration file that defines your devices, you can create new floop devices by running:
+Once you have a configuration file that defines your cores, you can create new floop cores by running:
 ::
 
   floop create
 
-Optionally, you can add the *-v* flag to see what floop is doing under the hood to establish communication with your remote devices and handle encrypted authentication.
+Optionally, you can add the *-v* flag to see what floop is doing under the hood to establish communication with your remote cores and handle encrypted authentication.
 
-If you see any errors, follow the help messages that floop provides. Make sure that you have defined valid devices and that you have network access to those devices.
+If you see any errors, follow the help messages that floop provides. Make sure that you have defined valid cores and that you have network access to those cores.
 
 6. Push Code from Host to Targets
 =================================
-Once you have successfully created one or more floop devices, you can push code from your configured *host_source_directory* to *device_target_directory* by running:
+Once you have successfully created one or more floop cores, you can push code from your configured *host_source_directory* to *core_target_directory* by running:
 ::
 
   floop push
@@ -357,20 +376,20 @@ For example, to show all lines that contain the term **TEST PASSED** you can run
 
   floop logs -m "TEST PASSED"
 
-12. Destroy Floop Target Devices
+12. Destroy Floop Target Cores
 ================================
-When you are finished with this guide, you can destroy all the floop devices defined in your configuration file by running:
+When you are finished with this guide, you can destroy all the floop cores defined in your configuration file by running:
 ::
 
   floop destroy
 
-:subscript:`(Note: floop destroys floop resources on all target devices and frees resources on the host. It does NOT remove your project or source from your host.)`
+:subscript:`(Note: floop destroys floop resources on all target cores and frees resources on the host. It does NOT remove your project or source from your host.)`
 
-Optionally, you can add the *-v* flag to see that floop destroys devices by removing the *device_target_directory* from all targets, uninstalling Docker from all targets, and removing Docker Machines from the host.
+Optionally, you can add the *-v* flag to see that floop destroys cores by removing the *core_target_directory* from all targets, uninstalling Docker from all targets, and removing Docker Machines from the host.
 
-If you followed this guide using more than one ARM device or Docker Machine, you may only want to destroy some of the floop devices you created before. In order to do this, you can remove all of the devices you want to destroy from your **floop.json** and add them to a new configuration file called **floop-destroy.json**. You can then destroy those devices using the *-c* flag for the floop command by running:
+If you followed this guide using more than one ARM core or Docker Machine, you may only want to destroy some of the floop cores you created before. In order to do this, you can remove all of the cores you want to destroy from your **floop.json** and add them to a new configuration file called **floop-destroy.json**. You can then destroy those cores using the *-c* flag for the floop command by running:
 ::
 
   floop -c floop-destroy.json destroy
 
-This will free floop-related resources from the devices defined in **floop-destroy.json** while leaving the remaining devices in **floop.json** untouched.
+This will free floop-related resources from the cores defined in **floop-destroy.json** while leaving the remaining cores in **floop.json** untouched.

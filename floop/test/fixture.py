@@ -76,6 +76,13 @@ def fixture_valid_core_config(request):
                 'core' : _TEST_DEVICE_NAME, 
                 'user' : 'floop'}
 
+
+@pytest.fixture(scope='function')
+def fixture_invalid_core_core_config(request):
+    config = fixture_valid_core_config(request)
+    config['core'] = 'thisshouldfail'
+    return config
+
 @pytest.fixture(scope='function')
 def fixture_valid_config_file(request):
     if environ.get('FLOOP_LOCAL_HARDWARE_TEST'):
@@ -123,8 +130,6 @@ def fixture_incomplete_config_file(request):
         json.dump(data, cf)
     return config_file
 
-
-
 @pytest.fixture(scope='function')
 def fixture_valid_src_directory(request):
     src_dir = _DEVICE_TEST_SRC_DIRECTORY 
@@ -136,20 +141,6 @@ def fixture_valid_src_directory(request):
             rmtree(src_dir)
     request.addfinalizer(cleanup)
     return src_dir
-
-
-#@pytest.fixture(scope='function')
-#def fixture_invalid_core_configs():
-#    config = fixture_valid_core_config()
-#    invalid_items = {'address' : '192.168.1.1222222',
-#            'user' : 'definitelyanunauthorizeduser'}
-#    configs = []
-#    for key, val in invalid_items.items():
-#        invalid_config = copy(config)
-#        invalid_config['name'] = 'thisshouldfail'
-#        invalid_config[key] = val
-#        configs.append(invalid_config)
-#    return configs 
 
 @pytest.fixture(scope='function')
 def fixture_valid_target_directory():
@@ -234,4 +225,33 @@ def fixture_missing_property_config_file(request):
         json.dump(data, cf)
     return config_file
 
+@pytest.fixture(scope='function')
+def fixture_nonexistent_source_dir_config(request):
+    test_config = fixture_valid_core_config(request)
+    test_config['host_source'] = \
+            'definitely/not/a/real/directory/'
+    return test_config 
+
+@pytest.fixture(scope='function')
+def fixture_nonexistent_source_dir_cli_config_file(request):
+    config_file = fixture_valid_config_file(request)
+    with open(config_file, 'r') as cf:
+        data = json.load(cf)
+    data['groups']['group0']['cores']['default']['host_source'] =\
+            'definitely/not/a/real/src/dir/'
+    with open(config_file, 'w') as cf:
+        json.dump(data, cf)
+    return config_file 
+
+@pytest.fixture(scope='function')
+def fixture_protected_target_directory_config(request):
+    test_config = fixture_valid_core_config(request)
+    test_config['target_source'] = '/.test/' 
+    return test_config 
+
+@pytest.fixture(scope='function')
+def fixture_docker_machine_wrapper(request):
+    def wrapper():
+        fixture_valid_docker_machine()
+    return wrapper
 

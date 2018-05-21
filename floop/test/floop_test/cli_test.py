@@ -7,7 +7,7 @@ from os.path import isfile
 from itertools import combinations
 
 from floop.util.syscall import syscall, SystemCallException
-from floop.test.floop_test.fixture import * 
+from floop.test.fixture import * 
 
 @pytest.fixture(scope='function')
 def fixture_unknown_cli_commands():
@@ -21,7 +21,7 @@ def fixture_unknown_cli_commands():
 
 @pytest.fixture(scope='function')
 def fixture_cli_base(request):
-    return ['floop', 'floop -c floop.json']#.format(test_config_file)]
+    return ['floop', 'floop -c floop.json']
 
 @pytest.fixture(scope='function')
 def fixture_cli_base_nonexistent_config_file():
@@ -66,23 +66,35 @@ def fixture_malformed_floop_configs(request):
             json.dump(config, cf)
     return config_files
 
+def test_cli_build_fail_fails(fixture_valid_config_file, fixture_failing_buildfile):
+    with pytest.raises(SystemCallException):
+        syscall(
+            'floop -c {} build'.format(
+                fixture_valid_config_file), check=True)
 
-#@pytest.fixture(scope='function')
-#def fixture_nonexistent_source_dir_config(request):
-#    test_config_file = fixture_valid_config_file(request)
-#    with open(test_config_file) as tcf:
-#        invalid_config = json.load(tcf)
-#    invalid_config['host_source'] = 'definitely/not/a/real/directory/'
-#    config_file = 'config-nonexistent-source-dir.json'
-#    def cleanup():
-#        if isfile(config_file):
-#            remove(config_file)
-#    cleanup()
-#    request.addfinalizer(cleanup)
-#    with open(config_file, 'w') as cf:
-#        json.dump(invalid_config, cf)
-#    return config_file 
+def test_cli_run_fail_fails(fixture_valid_config_file, fixture_failing_runfile):
+    with pytest.raises(SystemCallException):
+        syscall(
+            'floop -c {} run'.format(
+                fixture_valid_config_file), check=True)
 
+def test_cli_test_fail_fails(fixture_valid_config_file, fixture_failing_testfile):
+    with pytest.raises(SystemCallException):
+        syscall(
+            'floop -c {} test'.format(
+                fixture_valid_config_file), check=True)
+
+def test_cli_push_nonexistent_src_dir_fails(fixture_nonexistent_source_dir_cli_config_file):
+    with pytest.raises(SystemCallException):
+        syscall(
+            'floop -c {} push'.format(
+                fixture_nonexistent_source_dir_cli_config_file), check=True)
+
+def test_cli_push_redundant_config_fails(fixture_redundant_config_file):
+    with pytest.raises(SystemCallException):
+        syscall(
+            'floop -c {} push'.format(
+                fixture_redundant_config_file), check=True)
 def test_cli_version():
     syscall('floop --version', check=True)
 
@@ -216,19 +228,21 @@ class TestTest():
             with pytest.raises(SystemCallException):
                 syscall('{} test -v'.format(base), check=True)
 
-#class TestDestroy():
-#    def test_cli_destroy(self, fixture_cli_base,
-#            fixture_valid_config_file,
-#            fixture_docker_machine_wrapper):
-#        enforce_docker_machine = fixture_docker_machine_wrapper
-#        for base in fixture_cli_base:
-#            enforce_docker_machine()
-#            syscall('{} destroy'.format(base), check=False)
-#            enforce_docker_machine()
-#            syscall('{} destroy -v'.format(base), check=False)
-#
-#    def test_cli_destroy_nonexistent_config_file_fails(self, fixture_cli_base):
-#        with pytest.raises(SystemCallException):
-#            for base in fixture_cli_base:
-#                syscall('{} destroy'.format(base), check=True)
-#                syscall('{} destroy -v'.format(base), check=True)
+class TestDestroy():
+    def test_cli_destroy(self, fixture_cli_base,
+            fixture_valid_config_file,
+            fixture_docker_machine_wrapper):
+        enforce_docker_machine = fixture_docker_machine_wrapper
+        for base in fixture_cli_base:
+            enforce_docker_machine()
+            syscall('{} destroy'.format(base), check=False)
+            enforce_docker_machine()
+            syscall('{} destroy -v'.format(base), check=False)
+
+    def test_cli_destroy_nonexistent_config_file_fails(self, fixture_cli_base):
+        with pytest.raises(SystemCallException):
+            for base in fixture_cli_base:
+                syscall('{} destroy'.format(base), check=True)
+        with pytest.raises(SystemCallException):
+            for base in fixture_cli_base:
+                syscall('{} destroy -v'.format(base), check=True)

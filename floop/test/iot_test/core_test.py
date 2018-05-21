@@ -16,7 +16,7 @@ import json
 from shutil import rmtree, which
 from copy import copy
 from floop.util.syscall import syscall
-from floop.test.floop_test.fixture import *
+from floop.test.fixture import *
 
 @pytest.fixture(scope='function')
 def fixture_valid_core(request):
@@ -27,6 +27,10 @@ def fixture_valid_core(request):
 
 def test_core_init(fixture_docker_machine_bin, fixture_valid_core_config):
     core = Core(**fixture_valid_core_config)
+
+def test_core_nonexistent_src_dir_fails(fixture_nonexistent_source_dir_config):
+    with pytest.raises(CoreSourceNotFound):
+        Core(**fixture_nonexistent_source_dir_config)
 
 def test_core_init_nonexistent_ssh_key_fails(fixture_valid_core_config):
     config = fixture_valid_core_config
@@ -42,24 +46,22 @@ def test_core_set_attributes_after_init_fails(fixture_valid_core_config):
         with pytest.raises(CannotSetImmutableAttribute):
             setattr(core, key, fixture_valid_core_config[key])
 
+def test_core_create_invalid_core_fails(fixture_invalid_core_core_config):
+    core = Core(**fixture_invalid_core_core_config)
+    with pytest.raises(CoreCreateException):
+        create(core)
+
 def test_core_run_ssh_command_pwd(fixture_valid_core):
     fixture_valid_core.run_ssh_command(command='pwd', check=True)
 
 def test_core_push(fixture_valid_core):
     push(fixture_valid_core)
 
-#def test_core_push_nonexistent_src_dir_fails(fixture_valid_core,
-#        fixture_valid_target_directory):
-#    with pytest.raises(CoreSourceNotFound):
-#        push(fixture_valid_core)
-#
-#def test_core_push_restricted_target_dir_fails(fixture_valid_core,
-#        fixture_valid_src_directory):
-#    with pytest.raises(CoreCommunicationException):
-#        push(fixture_valid_core,
-#            source_directory=fixture_valid_src_directory,
-#            target_directory='/.test/'
-#        )
+def test_core_push_protected_target_dir_fails(fixture_protected_target_directory_config):
+    core = Core(**fixture_protected_target_directory_config)
+    create(core)
+    with pytest.raises(CoreCommunicationException):
+        push(core)
 
 def test_core_build(fixture_valid_core, fixture_buildfile):
     build(fixture_valid_core)
@@ -99,9 +101,6 @@ def test_core_test_docker_test_fail_fails(fixture_valid_core,
         fixture_failing_testfile, fixture_valid_target_directory):
     with pytest.raises(CoreTestException):
         test(fixture_valid_core)
-
-def test_core_destroy(fixture_valid_core, fixture_valid_target_directory):
-    destroy(fixture_valid_core)
 
 def test_core_destroy(fixture_valid_core, fixture_valid_target_directory):
     destroy(fixture_valid_core)

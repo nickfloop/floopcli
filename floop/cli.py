@@ -211,6 +211,7 @@ class FloopCLI(object):
             exit('''Error| Communication with target core returned non-zero error\n\n\
 \tOptions to fix this error:\n\
 \t--------------------------\n\
+\tCheck that you have permission to access target_source for all cores\n\
 \tCheck that you have Internet access from the host\n\
 \tCheck that the core is still accessible at the address in your config file\n\
 ''')

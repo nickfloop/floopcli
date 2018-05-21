@@ -22,7 +22,6 @@ _FLOOP_CONFIG_DEFAULT_CONFIGURATION = {
                     'address' : '192.168.1.100', 
                     'user' : 'floop',             
                     'host_key' : '~/.ssh/id_rsa', 
-                    'devices' : []
                 }
             }
         }
@@ -51,6 +50,9 @@ def _flatten(config):
     # forces config to have default groups and cores
     except (TypeError, KeyError) as e:
         raise MalformedConfigException(str(e))
+
+if __name__ == '__main__':
+    print(_flatten(_FLOOP_CONFIG_DEFAULT_CONFIGURATION))
 
 class CannotSetImmutableAttributeException(Exception):
     '''
