@@ -4,7 +4,7 @@ from os import rename
 from os.path import isdir, isfile
 from shutil import which
 from floop.iot.core import Core 
-from typing import Any, Dict, List
+from typing import Any, Dict, List, TypeVar
 
 # default config to write when using floop config 
 _FLOOP_CONFIG_DEFAULT_CONFIGURATION = {
@@ -119,6 +119,9 @@ def _read_json(json_file : str) -> dict:
     with open(json_file) as j:
         return json.load(j)
 
+ConfigType = TypeVar('ConfigType', bound='Config')
+'''Generic self config type for stateful method return'''
+
 class Config(object):
     def __init__(self, config_file : str) -> None:
         self.default_config = _FLOOP_CONFIG_DEFAULT_CONFIGURATION 
@@ -137,7 +140,7 @@ class Config(object):
             raise CannotSetImmutableAttributeException('config')
         self.__config = value
 
-    def read(self) -> Config:
+    def read(self: ConfigType) -> ConfigType:
         '''
         Read configuration file
 

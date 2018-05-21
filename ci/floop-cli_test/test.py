@@ -33,6 +33,9 @@ def lambda_handler(event, context):
     '''
     AWS Lambda handler for floop-cli integration testing
     '''
+    if event['config']['secret'] != \
+            os.environ['FLOOP_CLI_GITHUB_WEBHOOK_SECRET']:
+        raise Exception('Incorrect Github webhook secret')
 
     ec2 = get_client('ec2')
 
@@ -67,6 +70,9 @@ GIT_SSH_COMMAND='ssh -i ~/.ssh/id_rsa' \
 # local install floop-cli
 cd floop-cli && sudo pip3 install -e .
 
+# check static typing
+mypy --ignore-missing-imports --disallow-untyped-defs floop/
+
 # install docker-machine
 base=https://github.com/docker/machine/releases/download/v0.14.0 &&\
   curl -L $base/docker-machine-$(uname -s)-$(uname -m) >/tmp/docker-machine &&\
@@ -76,9 +82,6 @@ base=https://github.com/docker/machine/releases/download/v0.14.0 &&\
 {} &\
 {} &\
 wait
-
-# check static typing
-mypy --ignore-missing-imports --disallow-untyped-defs floop/
 
 # run pytest on floop-cli, set cloud test env variable to true
 #FLOOP_CLOUD_TEST=true pytest --cov-report term-missing --cov=floop -v -s -x floop
@@ -109,5 +112,5 @@ trap cleanup EXIT ERR INT TERM'''.format(
     print(instance_id)
     return instance_id
 
-if __name__ == '__main__':
-    lambda_handler(None, None)
+#if __name__ == '__main__':
+#    lambda_handler(None, None)

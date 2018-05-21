@@ -1,7 +1,7 @@
 import subprocess
 from sys import stdout
 from shlex import split
-from typing import Tuple 
+from typing import List, Tuple 
 
 class SystemCallException(Exception):
     '''
@@ -29,8 +29,8 @@ def syscall(command: str, check: bool=False, verbose: bool=False) -> Tuple[str, 
         (str, str):
             tuple of command output to (stdout, stderr)
     '''
-    #command = split(command)
-    process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    command_ = split(command)
+    process = subprocess.Popen(command_, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     out = ''
     for line in process.stdout:
         line = line.decode('utf-8')

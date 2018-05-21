@@ -235,7 +235,7 @@ class FloopCLI(object):
         if hasattr(logger, level):
             message = '{} (host) - {}: {}'.format(
                     gethostname(), 
-                    _getframe(1).f_code.co_name, # calling function name
+                    _getframe(1).f_code.co_name, # calling-function name
                     message)
             getattr(logger, level)(message)
 
@@ -365,7 +365,6 @@ class FloopCLI(object):
         args = parser.parse_args(argv[self.command_index:])
         if not args.verbose:
             quiet()
-        #self.push()
         with Pool() as pool:
             pool.map(build, self.cores)
 

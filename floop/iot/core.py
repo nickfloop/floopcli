@@ -9,6 +9,16 @@ from floop.util.syscall import syscall, SystemCallException
 
 logger = logging.getLogger(__name__)
 
+def verbose() -> bool:
+    '''
+    Check whether verbose mode is enabled
+
+    Returns:
+        bool:
+            if True, verbose is enabled
+    '''
+    return 'console' in [h.name for h in logging.getLogger().handlers[:]]
+
 class CannotSetImmutableAttribute(Exception):
     '''
     Tried to set immutable attribute after initialization
@@ -132,7 +142,7 @@ class Core(object):
         self.host_source = host_source
         '''Path on host to source file directory'''
         self.core = core.replace(' ','').replace('-','')
-        '''Core core (must match Docker machine core, if machine already exist)
+        '''Core name (must match Docker machine core, if machine already exists)
         During initialization, all machine cores will have spaces and -'s removed
         '''
         self.user = user
@@ -412,15 +422,14 @@ def build(core: Core, check: bool=True) -> None:
     meta_build_command = 'docker build -t floop {}/'.format(core.target_source)
     __log(core, 'info', meta_build_command)
     try:
-        out = core.run_ssh_command(meta_build_command, check=check)
+        out = core.run_ssh_command(meta_build_command, check=check, verbose=verbose())
         __log(core, 'info', out)
     except SystemCallException as e:
         __log(core, 'error', str(e))
         raise CoreBuildException(str(e))
 
 def run(core: Core,
-        check: bool=True,
-        verbose: bool=False) -> None:
+        check: bool=True) -> None:
     '''
     Parallelizable; push, build, then run files from host on target core 
 
@@ -441,12 +450,12 @@ def run(core: Core,
     rm_command = 'docker rm -f floop || true'
     __log(core, 'info', rm_command)
     try:
-        out = core.run_ssh_command(command=rm_command, check=check, verbose=verbose)
+        out = core.run_ssh_command(command=rm_command, check=check, verbose=verbose())
         __log(core, 'info', out)
         run_command = 'docker run --name floop -v {}:/floop/ floop'.format(
                 core.target_source)
         __log(core, 'info', run_command)
-        out = core.run_ssh_command(command=run_command, check=check, verbose=verbose)
+        out = core.run_ssh_command(command=run_command, check=check, verbose=verbose())
         __log(core, 'info', out)
     except SystemCallException as e:
         __log(core, 'error', str(e))
@@ -509,17 +518,17 @@ def test(core: Core,
     try:
         rm_command = 'docker rm -f flooptest || true'
         __log(core, 'info', rm_command)
-        out = core.run_ssh_command(rm_command, check=check)
+        out = core.run_ssh_command(rm_command, check=check, verbose=verbose())
         __log(core, 'info', out)
         test_build_command = 'docker build -t flooptest -f {}/{} {}'.format(
                 core.target_source, test_file.split('/')[-1], core.target_source)
         __log(core, 'info', test_build_command)
-        out = core.run_ssh_command(test_build_command, check=check)
+        out = core.run_ssh_command(test_build_command, check=check, verbose=verbose())
         __log(core, 'info', out)
         test_run_command = 'docker run --name flooptest -v {}:/floop/ flooptest'.format(
                 core.target_source)
         __log(core, 'info', test_run_command)
-        out = core.run_ssh_command(test_run_command, check=check)
+        out = core.run_ssh_command(test_run_command, check=check, verbose=verbose())
         __log(core, 'info', out)
     except SystemCallException as e:
         __log(core, 'error', str(e))
@@ -558,7 +567,7 @@ def destroy(core: Core,
             kind, command = command_
             __log(core, 'info', command)
             if kind == 'ssh':
-                out = core.run_ssh_command(command=command, check=check)
+                out = core.run_ssh_command(command=command, check=check, verbose=verbose())
                 __log(core, 'info', out)
             elif kind =='sys':
                 out, err = syscall(command=command, check=check)
