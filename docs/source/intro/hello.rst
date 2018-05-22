@@ -84,7 +84,7 @@ To start, we will make a simple app to print "Hello, World!" to the console. We 
         
         Add the following code to a file called **hello.cpp**:
 
-        .. literalinclude:: ../../../example/src/cpp/hello.cpp
+        .. literalinclude:: ../../../example/cpp/hello/src/hello.cpp
             :language: c++
 
         We need a header file in order to share the *hello* function 
@@ -92,7 +92,7 @@ To start, we will make a simple app to print "Hello, World!" to the console. We 
 
         Add the following code to a file called **hello.h**:
             
-        .. literalinclude:: ../../../example/src/cpp/hello.h
+        .. literalinclude:: ../../../example/cpp/hello/src/hello.h
             :language: c++
 
         We need a test routine in order to test the *hello* function.
@@ -100,7 +100,7 @@ To start, we will make a simple app to print "Hello, World!" to the console. We 
 
         Add the following code to a file called **hello_test.cpp**:
 
-        .. literalinclude:: ../../../example/src/cpp/hello_test.cpp
+        .. literalinclude:: ../../../example/cpp/hello/src/hello_test.cpp
             :language: c++
 
         Finally, we need a main routine to run the *hello* function
@@ -108,7 +108,7 @@ To start, we will make a simple app to print "Hello, World!" to the console. We 
 
         Add the following code to a file called **main.cpp**:
 
-        .. literalinclude:: ../../../example/src/cpp/main.cpp
+        .. literalinclude:: ../../../example/cpp/hello/src/main.cpp
             :language: c++
 
 
@@ -165,13 +165,13 @@ Since testing often requires different dependencies and run behavior than a prod
 
         To accomplish these steps, add the following code to a file called **Dockerfile.test**:
 
-        .. literalinclude:: ../../../example/src/cpp/Dockerfile.test
+        .. literalinclude:: ../../../example/cpp/hello/src/Dockerfile.test
            
         At the end of the **Dockerfile.test** environment, it calls a script called **test.sh**. This script should compile all the code that needs to be tested, then run that code inside of the test environment.
 
         Add the following code to a file called **test.sh**:
 
-        .. literalinclude:: ../../../example/src/cpp/test.sh
+        .. literalinclude:: ../../../example/cpp/hello/src/test.sh
 
         Now when we run our floop tests, we will automatically re-compile all new code alongside our testing utilities, then run the tests.
 
@@ -181,13 +181,13 @@ Since testing often requires different dependencies and run behavior than a prod
 
         To accomplish these steps, add the following code to a file called **Dockerfile**:
 
-        .. literalinclude:: ../../../example/src/cpp/Dockerfile
+        .. literalinclude:: ../../../example/cpp/hello/src/Dockerfile
 
         At the end of the **Dockerfile** environment, it calls a script called **run.sh**. This script should compile all the code that needs to be run then run that code inside of the run environment.
 
         Add the following code to a file called **run.sh**:
 
-        .. literalinclude:: ../../../example/src/cpp/run.sh
+        .. literalinclude:: ../../../example/cpp/hello/src/run.sh
 
         Now when we run our code, we will automatically re-compile all new code alongside our production utilities, then run the final binary.
         
