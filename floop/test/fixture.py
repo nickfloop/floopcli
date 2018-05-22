@@ -16,7 +16,7 @@ FLOOP_TEST_CONFIG_FILE = './floop.json'
 FLOOP_TEST_CONFIG = _FLOOP_CONFIG_DEFAULT_CONFIGURATION
 
 _TEST_CORE_NAME = \
-        os.environ.get('FLOOP_CLOUD_CORES').split(':')[0] or 'core0'
+        environ.get('FLOOP_CLOUD_CORES').split(':')[0] or 'core0'
 
 _DEVICE_TEST_SRC_DIRECTORY = '{}/src/'.format(dirname(
     abspath(__file__))
@@ -259,6 +259,7 @@ def fixture_nonexistent_source_dir_config(request):
 
 @pytest.fixture(scope='function')
 def fixture_nonexistent_source_dir_cli_config_file(request):
+    print(environ)
     config_file = fixture_valid_config_file(request)
     with open(config_file, 'r') as cf:
         data = json.load(cf)
