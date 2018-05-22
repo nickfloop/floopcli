@@ -2,16 +2,21 @@ import argparse
 import json
 import logging
 
+from multiprocessing import Pool
+from os import makedirs, remove 
+from os.path import isfile, dirname, expanduser, abspath
 from pkg_resources import require, DistributionNotFound
-from sys import argv, exit, modules, _getframe
+from platform import system
 from shutil import copyfile
 from socket import gethostname
-from functools import partial
-from os.path import isfile, dirname, expanduser, abspath
-from os import makedirs, remove 
-from multiprocessing import Pool
-from platform import system
+from sys import argv, exit, modules, _getframe
 from time import time
+
+from floop.config import Config, \
+        ConfigFileDoesNotExist, \
+        MalformedConfigException, \
+        UnmetHostDependencyException, \
+        RedundantCoreConfigException
 from floop.iot.core import build, create, destroy, ps, push, run, test, \
         CoreSourceNotFound, \
         CoreBuildException, \
@@ -19,11 +24,6 @@ from floop.iot.core import build, create, destroy, ps, push, run, test, \
         CoreTestException, \
         CoreCommunicationException, \
         CorePSException
-from .config import Config, \
-        ConfigFileDoesNotExist, \
-        MalformedConfigException, \
-        UnmetHostDependencyException, \
-        RedundantCoreConfigException
 
 logger = logging.getLogger(__name__)
 
