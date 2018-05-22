@@ -72,7 +72,7 @@ def fixture_valid_core_config(request):
                 'host_key' :  '~/.ssh/id_rsa', 
                 'host_rsync_bin' : fixture_rsync_bin(),
                 'host_source' : fixture_valid_src_directory(request),
-                'core' : , _TEST_CORE_NAME
+                'core' : _TEST_CORE_NAME,
                 'user' : 'floop'}
     else: 
         return {'address' : '192.168.1.100',
@@ -97,7 +97,7 @@ def fixture_valid_config_file(request):
     if environ.get('FLOOP_LOCAL_HARDWARE_TEST'):
         pass
     elif environ.get('FLOOP_CLOUD_TEST') is not None:
-        cloud_cores = os.environ['FLOOP_CLOUD_CORES'].split(':')
+        cloud_cores = environ['FLOOP_CLOUD_CORES'].split(':')
         src_dir = fixture_valid_src_directory(request)
         config_file = fixture_default_config_file(request)
         with open(config_file, 'r') as cf:

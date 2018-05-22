@@ -76,13 +76,13 @@ def lambda_handler(event, context):
 set -e
 
 # force shutdown and terminate after a time limit, even if processes are running
-#shutdown -H 10
+shutdown -H 10
 
 # clean up function to run at the end of testing
 cleanup () {{
-    #docker-machine rm -f {}
-    #docker-machine rm -f {}
-    #shutdown -H now
+    docker-machine rm -f {}
+    docker-machine rm -f {}
+    shutdown -H now
 }}
 
 # no matter what happens, call cleanup
@@ -117,9 +117,7 @@ base=https://github.com/docker/machine/releases/download/v0.14.0 &&\
 wait
 
 # run pytest on floop-cli, set cloud test env variable to true
-export FLOOP_CLOUD_TEST=true && \
-export FLOOP_CLOUD_CORES={}:{} && \
-pytest --cov-report term-missing --cov=floop -v -s -x floop'''.format(
+FLOOP_CLOUD_TEST=true FLOOP_CLOUD_CORES={}:{} pytest --cov-report term-missing --cov=floop -v -s -x floop'''.format(
         cores[0],
         cores[1],
         decrypt('SSH_KEY'),
