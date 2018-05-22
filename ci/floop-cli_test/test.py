@@ -38,9 +38,8 @@ def get_client(service):
         aws_secret_access_key = decrypt('AWS_SECRET_KEY_')
     )
 
-NOW = time()
 def docker_machine_name():
-    return ''.join(choice(ascii_uppercase) for i in range(16)) + str(int(NOW*10000))
+    return ''.join(choice(ascii_uppercase) for i in range(16)) + str(int(time()*10000))
 
 def docker_machine_string(name):
     return '''docker-machine create \
