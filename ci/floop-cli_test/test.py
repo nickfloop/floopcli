@@ -115,7 +115,9 @@ base=https://github.com/docker/machine/releases/download/v0.14.0 &&\
 wait
 
 # run pytest on floop-cli, set cloud test env variable to true
-FLOOP_CLOUD_TEST=true FLOOP_CLOUD_CORES={}:{} pytest --cov-report term-missing --cov=floop -v -s -x floop
+export FLOOP_CLOUD_TEST=true && \
+export FLOOP_CLOUD_CORES={}:{} && \
+pytest --cov-report term-missing --cov=floop -v -s -x floop
 
 # no matter what happens, call cleanup
 trap cleanup EXIT ERR INT TERM'''.format(
