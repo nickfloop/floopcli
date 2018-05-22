@@ -17,7 +17,7 @@ def verbose() -> bool:
         bool:
             if True, verbose is enabled
     '''
-    return 'console' in [h.name for h in logging.getLogger().handlers[:]]
+    return 'console' in [h.name for h in logging.getLogger().handlers[:]] #type: ignore
 
 class CannotSetImmutableAttribute(Exception):
     '''
