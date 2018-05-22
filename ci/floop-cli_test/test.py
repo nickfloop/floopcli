@@ -140,7 +140,8 @@ trap cleanup EXIT ERR INT TERM'''.format(
         MinCount=1,
         MaxCount=1,
         InstanceInitiatedShutdownBehavior='terminate',
-        UserData=init_script
+        UserData=init_script,
+        Monitoring={'Enabled' : True}
     )
 
     instance_id = instance['Instances'][0]['InstanceId']
