@@ -5,5 +5,5 @@ if __name__ == '__main__':
     make_zip_archive(). \
     create_or_update_function(). \
     publish_function_version(). \
-    create_alias(). \
-    test_on_cloud()
+    create_alias()#. \
+    #test_on_cloud()

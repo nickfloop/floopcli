@@ -15,7 +15,8 @@ FLOOP_TEST_CONFIG_FILE = './floop.json'
 
 FLOOP_TEST_CONFIG = _FLOOP_CONFIG_DEFAULT_CONFIGURATION
 
-_TEST_DEVICE_NAME = 'core0'
+_TEST_CORE_NAME = \
+        os.environ.get('FLOOP_CLOUD_CORES').split(':')[0] or 'core0'
 
 _DEVICE_TEST_SRC_DIRECTORY = '{}/src/'.format(dirname(
     abspath(__file__))
@@ -56,7 +57,7 @@ def fixture_valid_docker_machine():
         create_local_machine = '''docker-machine create 
         --driver virtualbox 
         --virtualbox-memory 1024
-        {}'''.format(_TEST_DEVICE_NAME)
+        {}'''.format(_TEST_CORE_NAME)
         syscall(create_local_machine, check=False)
 
 @pytest.fixture(scope='function')
@@ -71,7 +72,7 @@ def fixture_valid_core_config(request):
                 'host_key' :  '~/.ssh/id_rsa', 
                 'host_rsync_bin' : fixture_rsync_bin(),
                 'host_source' : fixture_valid_src_directory(request),
-                'core' : _TEST_DEVICE_NAME, 
+                'core' : , _TEST_CORE_NAME
                 'user' : 'floop'}
     else: 
         return {'address' : '192.168.1.100',
@@ -81,7 +82,7 @@ def fixture_valid_core_config(request):
                 'host_key' :  '~/.ssh/id_rsa', 
                 'host_rsync_bin' : fixture_rsync_bin(),
                 'host_source' : fixture_valid_src_directory(request),
-                'core' : _TEST_DEVICE_NAME, 
+                'core' : _TEST_CORE_NAME, 
                 'user' : 'floop'}
 
 
@@ -96,7 +97,23 @@ def fixture_valid_config_file(request):
     if environ.get('FLOOP_LOCAL_HARDWARE_TEST'):
         pass
     elif environ.get('FLOOP_CLOUD_TEST'):
-        pass
+        cloud_cores = os.environ['FLOOP_CLOUD_CORES'].split(':')
+        src_dir = fixture_valid_src_directory(request)
+        config_file = fixture_default_config_file(request)
+        with open(config_file, 'r') as cf:
+            data = json.load(cf)
+        data['groups']['group0']['cores']['default']['host_source'] = src_dir
+        del data['groups']['group0']['cores']['core0']
+        for core in cloud_cores:
+            data['groups']['group0']['cores'][core] = {
+                'address' : '192.168.1.100',
+                'target_source' : '/home/floop/floop',
+                'user' : 'floop',
+                'host_key' : '~/.ssh/id_rsa'
+            }
+        with open(config_file, 'w') as cf:
+            json.dump(data, cf)
+        return config_file
     else: 
         src_dir = fixture_valid_src_directory(request)
         config_file = fixture_default_config_file(request)

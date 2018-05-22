@@ -1,43 +1,74 @@
 import os
 import boto3
+import json
+import hmac
+import hashlib
+
+from base64 import b64decode
+from random import choice
+from string import ascii_uppercase
+from time import time
 
 '''
 Note:
     AWS_DEFAULT_REGION, AWS_ACCESS_KEY, AWS_SECRET_KEY are protected by Lambda
     Add a trailing _ to define your own. Make sure these values are defined
-    in the Lambda dashboard.
+    in the Lambda dashboard..
 '''
+
+def decrypt(key):
+    return boto3.client('kms').decrypt(CiphertextBlob=b64decode(os.environ[key]))['Plaintext'].decode('utf-8')
+
+def validate_secret(event):
+    sha, sig = event['headers']['X-Hub-Signature'].split('=')
+    if sha != 'sha1':
+        return False
+    digest = hmac.new(
+        bytes(os.environ['FLOOP_CLI_GITHUB_WEBHOOK_SECRET'], 'utf-8'),
+        msg=bytes(event['body'], 'utf-8'),
+        digestmod=hashlib.sha1).hexdigest()
+    valid = hmac.compare_digest(digest.encode('utf-8'), sig.encode('utf-8'))
+    return valid
 
 def get_client(service):
     return boto3.client(
         service_name = service,
-        region_name = os.environ['AWS_DEFAULT_REGION_'], 
-        aws_access_key_id = os.environ['AWS_ACCESS_KEY_'],
-        aws_secret_access_key = os.environ['AWS_SECRET_KEY_']
+        region_name = decrypt('AWS_DEFAULT_REGION_'), 
+        aws_access_key_id = decrypt('AWS_ACCESS_KEY_'),
+        aws_secret_access_key = decrypt('AWS_SECRET_KEY_')
     )
 
+NOW = time()
+def docker_machine_name():
+    return ''.join(choice(ascii_uppercase) for i in range(16)) + str(int(NOW*10000))
+
 def docker_machine_string(name):
-        return '''docker-machine create \
+    return '''docker-machine create \
 --driver amazonec2 \
 --amazonec2-instance-type=t2.nano \
 --amazonec2-region={} \
 --amazonec2-access-key={} \
 --amazonec2-secret-key={} \
 {}'''.format(
-        os.environ['AWS_DEFAULT_REGION_'],
-        os.environ['AWS_ACCESS_KEY_'],
-        os.environ['AWS_SECRET_KEY_'],
+        decrypt('AWS_DEFAULT_REGION_'),
+        decrypt('AWS_ACCESS_KEY_'),
+        decrypt('AWS_SECRET_KEY_'),
         name)
 
 def lambda_handler(event, context):
     '''
     AWS Lambda handler for floop-cli integration testing
     '''
-    if event['config']['secret'] != \
-            os.environ['FLOOP_CLI_GITHUB_WEBHOOK_SECRET']:
-        raise Exception('Incorrect Github webhook secret')
+    if not validate_secret(event):
+        return {
+            'statusCode': 400,
+            'body': json.dumps({'input': event, 'error' : 'Invalid Github secret'})
+        }
+        
 
     ec2 = get_client('ec2')
+
+    cores = [docker_machine_name(), docker_machine_name()]
 
     # this bash script runs as soon as the ec2 instance boots
     init_script = '''#!/bin/bash
@@ -84,15 +115,17 @@ base=https://github.com/docker/machine/releases/download/v0.14.0 &&\
 wait
 
 # run pytest on floop-cli, set cloud test env variable to true
-#FLOOP_CLOUD_TEST=true pytest --cov-report term-missing --cov=floop -v -s -x floop
+FLOOP_CLOUD_TEST=true FLOOP_CLOUD_CORES={}:{} pytest --cov-report term-missing --cov=floop -v -s -x floop
 
 # no matter what happens, call cleanup
 trap cleanup EXIT ERR INT TERM'''.format(
-        'core0',
-        'core1',
-        os.environ['SSH_KEY'],
-        docker_machine_string('core0'),
-        docker_machine_string('core1')
+        cores[0],
+        cores[1],
+        decrypt('SSH_KEY'),
+        docker_machine_string(cores[0]),
+        docker_machine_string(cores[1]),
+        cores[0],
+        cores[1]
     )
 
     print(init_script)
@@ -110,7 +143,7 @@ trap cleanup EXIT ERR INT TERM'''.format(
 
     instance_id = instance['Instances'][0]['InstanceId']
     print(instance_id)
-    return instance_id
-
-#if __name__ == '__main__':
-#    lambda_handler(None, None)
+    return {
+            'statusCode': 200,
+            'body': json.dumps({'instance_id' : instance_id})
+        }
