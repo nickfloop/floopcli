@@ -85,6 +85,9 @@ cleanup () {{
     shutdown -H now
 }}
 
+# no matter what happens, call cleanup
+trap cleanup EXIT ERR INT TERM SIGINT SIGTERM
+
 # install system dependencies
 sudo apt-get update && sudo apt-get install -y curl git rsync python3-pip
 
@@ -116,10 +119,7 @@ wait
 # run pytest on floop-cli, set cloud test env variable to true
 export FLOOP_CLOUD_TEST=true && \
 export FLOOP_CLOUD_CORES={}:{} && \
-pytest --cov-report term-missing --cov=floop -v -s -x floop
-
-# no matter what happens, call cleanup
-trap cleanup EXIT ERR INT TERM'''.format(
+pytest --cov-report term-missing --cov=floop -v -s -x floop'''.format(
         cores[0],
         cores[1],
         decrypt('SSH_KEY'),
@@ -139,8 +139,7 @@ trap cleanup EXIT ERR INT TERM'''.format(
         MinCount=1,
         MaxCount=1,
         InstanceInitiatedShutdownBehavior='terminate',
-        UserData=init_script,
-        Monitoring={'Enabled' : True}
+        UserData=init_script
     )
 
     instance_id = instance['Instances'][0]['InstanceId']
