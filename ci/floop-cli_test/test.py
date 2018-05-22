@@ -75,6 +75,12 @@ def lambda_handler(event, context):
 # if any command fails, just clean up and exit
 set -e
 
+# set verbose execution logging
+set -x
+
+# force stdout and stderr to log to ec2 console
+exec > >(tee /var/log/cloud-init-output.log|logger -t user-data ) 2>&1
+
 # force shutdown and terminate after a time limit, even if processes are running
 shutdown -H 10
 
