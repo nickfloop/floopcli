@@ -80,10 +80,8 @@ shutdown -H 10
 
 # clean up function to run at the end of testing
 cleanup () {{
-    cat /var/log/cloud-init.log || true
-    cat /var/log/cloud-init-output.log || true
-    docker-machine rm -f {} || true
-    docker-machine rm -f {} || true
+    docker-machine rm -f {}
+    docker-machine rm -f {}
     shutdown -H now
 }}
 

@@ -94,9 +94,10 @@ def fixture_invalid_core_core_config(request):
 
 @pytest.fixture(scope='function')
 def fixture_valid_config_file(request):
+    exit(environ)
     if environ.get('FLOOP_LOCAL_HARDWARE_TEST'):
         pass
-    elif environ.get('FLOOP_CLOUD_TEST'):
+    elif environ.get('FLOOP_CLOUD_TEST') is not None:
         cloud_cores = os.environ['FLOOP_CLOUD_CORES'].split(':')
         src_dir = fixture_valid_src_directory(request)
         config_file = fixture_default_config_file(request)
