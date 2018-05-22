@@ -79,7 +79,7 @@ set -e
 set -x
 
 # force stdout and stderr to log to ec2 console
-exec > >(tee /var/log/cloud-init-output.log|logger -t user-data ) 2>&1
+exec > >(tee -a /var/log/cloud-init-output.log|logger -t user-data ) 2>&1
 
 # force shutdown and terminate after a time limit, even if processes are running
 shutdown -H 10
