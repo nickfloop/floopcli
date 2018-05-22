@@ -76,13 +76,13 @@ def lambda_handler(event, context):
 set -e
 
 # force shutdown and terminate after a time limit, even if processes are running
-shutdown -H 10
+#shutdown -H 10
 
 # clean up function to run at the end of testing
 cleanup () {{
-    docker-machine rm -f {}
-    docker-machine rm -f {}
-    shutdown -H now
+    #docker-machine rm -f {}
+    #docker-machine rm -f {}
+    #shutdown -H now
 }}
 
 # no matter what happens, call cleanup
