@@ -104,9 +104,9 @@ def fixture_valid_config_file(request):
             data = json.load(cf)
         data['groups']['group0']['cores']['default']['host_source'] = src_dir
         del data['groups']['group0']['cores']['core0']
-        for core in cloud_cores:
+        for idx, core in enumerate(cloud_cores):
             data['groups']['group0']['cores'][core] = {
-                'address' : '192.168.1.100',
+                'address' : '192.168.1.' + str(idx),
                 'target_source' : '/home/floop/floop',
                 'user' : 'floop',
                 'host_key' : '~/.ssh/id_rsa'
