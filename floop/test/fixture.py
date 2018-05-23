@@ -111,6 +111,7 @@ def fixture_valid_config_file(request):
                 'user' : 'floop',
                 'host_key' : '~/.ssh/id_rsa'
             }
+        print(data)
         with open(config_file, 'w') as cf:
             json.dump(data, cf)
         return config_file
