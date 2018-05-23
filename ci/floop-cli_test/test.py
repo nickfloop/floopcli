@@ -63,8 +63,13 @@ def lambda_handler(event, context):
             'statusCode': 400,
             'body': json.dumps({'input': event, 'error' : 'Invalid Github secret'})
         }
-        
-
+    try:
+        commit = json.loads(event['body'])['after']
+    except KeyError:
+        return {
+            'statusCode': 400,
+            'body': json.dumps({'input': event, 'error' : 'No commit ID'})
+        }
     ec2 = get_client('ec2')
 
     cores = [docker_machine_name(), docker_machine_name()]
@@ -103,8 +108,11 @@ GIT_SSH_COMMAND='ssh -i ~/.ssh/id_rsa' \
         git clone git@github.com:nickfloop/floop-cli-private.git \
         floop-cli
 
+# checkout the commit that was just pushed
+cd floop-cli && git checkout {}
+
 # local install floop-cli
-cd floop-cli && sudo pip3 install -e .
+sudo pip3 install -e .
 
 # check static typing
 mypy --ignore-missing-imports --disallow-untyped-defs floop/
@@ -124,6 +132,7 @@ FLOOP_CLOUD_TEST=true FLOOP_CLOUD_CORES={}:{} pytest --cov-report term-missing -
         cores[0],
         cores[1],
         decrypt('SSH_KEY'),
+        commit,
         docker_machine_string(cores[0]),
         docker_machine_string(cores[1]),
         cores[0],
