@@ -81,7 +81,7 @@ def lambda_handler(event, context):
 set -e
 
 # force shutdown and terminate after a time limit, even if processes are running
-shutdown -H 20
+shutdown -H 30 
 
 # try to get ec2 to give any relevant information
 exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
