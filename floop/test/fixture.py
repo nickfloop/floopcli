@@ -226,7 +226,8 @@ def fixture_redundant_config_file(request):
     config_file = fixture_valid_config_file(request)
     with open(config_file, 'r') as cf:
         data = json.load(cf)
-    core_config = data['groups']['group0']['cores']['core0']
+    core = [k for k in data['groups']['group0']['cores'].keys() if k != 'default'][0]
+    core_config = data['groups']['group0']['cores'][core]
     default_config = data['groups']['group0']['cores']['default']
     data['groups']['group0']['cores'] = {
             'default' : default_config, 
@@ -259,7 +260,6 @@ def fixture_nonexistent_source_dir_config(request):
 
 @pytest.fixture(scope='function')
 def fixture_nonexistent_source_dir_cli_config_file(request):
-    print(environ)
     config_file = fixture_valid_config_file(request)
     with open(config_file, 'r') as cf:
         data = json.load(cf)
