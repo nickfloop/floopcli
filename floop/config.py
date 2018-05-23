@@ -1,4 +1,5 @@
 import json
+from copy import copy
 from time import time
 from os import rename
 from os.path import isdir, isfile
@@ -49,7 +50,7 @@ def _flatten(config : dict) -> List[dict]:
                 group_default = gval['cores']['default']
                 for core, dval in gval['cores'].items():
                     if core != 'default':
-                        core_config = default
+                        core_config = copy(default)
                         for key, val in group_default.items():
                             core_config[key] = val
                         for key, val in dval.items():
@@ -60,8 +61,11 @@ def _flatten(config : dict) -> List[dict]:
                         flat_config.append(core_config)
         return flat_config
     # forces config to have default groups and cores
-    except (TypeError, KeyError) as e:
+    except (TypeError, KeyError, AssertionError) as e:
         raise MalformedConfigException(str(e))
+
+#if __name__ == '__main__':
+#    print(_flatten({'groups': {'group0': {'cores': {'NPSYNUUZRDVOISSD15270591920877': {'target_source': '/home/floop/floop', 'user': 'floop', 'address': '192.168.1.0', 'host_key': '~/.ssh/id_rsa'}, 'PTRWLKBXPOLVSDOP15270591920877': {'target_source': '/home/floop/floop', 'user': 'floop', 'address': '192.168.1.1', 'host_key': '~/.ssh/id_rsa'}, 'default': {'host_source': '/floop-cli/floop/test/src/'}}}, 'default': {'host_docker_machine_bin': '/usr/local/bin/docker-machine', 'host_rsync_bin': '/usr/bin/rsync'}}}))
 
 class CannotSetImmutableAttributeException(Exception):
     '''
