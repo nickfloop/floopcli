@@ -123,8 +123,8 @@ base=https://github.com/docker/machine/releases/download/v0.14.0 &&\
   sudo install /tmp/docker-machine /usr/local/bin/docker-machine
 
 # start "target" ec2 instances as AWS Docker Machines, add ubuntu to docker group
-{} && docker-machine ssh {} usermod -aG docker ubuntu & \
-{} && docker-machine ssh {} usermod -aG docker ubuntu & \
+{} && docker-machine ssh {} sudo usermod -aG docker ubuntu & \
+{} && docker-machine ssh {} sudo usermod -aG docker ubuntu & \
 wait
 
 # run pytest on floop-cli, set cloud test env variable to true
@@ -135,6 +135,8 @@ FLOOP_CLOUD_TEST=true FLOOP_CLOUD_CORES={}:{} pytest --cov-report term-missing -
         commit,
         docker_machine_string(cores[0]),
         docker_machine_string(cores[1]),
+        cores[0],
+        cores[1],
         cores[0],
         cores[1]
     )
