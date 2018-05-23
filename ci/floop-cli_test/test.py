@@ -133,8 +133,8 @@ FLOOP_CLOUD_TEST=true FLOOP_CLOUD_CORES={}:{} pytest --cov-report term-missing -
         decrypt('SSH_KEY'),
         commit,
         docker_machine_string(cores[0]),
-        docker_machine_string(cores[1]),
         cores[0],
+        docker_machine_string(cores[1]),
         cores[1],
         cores[0],
         cores[1]
