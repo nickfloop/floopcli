@@ -84,7 +84,7 @@ set -e
 shutdown -H 15 
 
 # try to get ec2 to give any relevant information
-#exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
+exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
 
 # clean up function to run at the end of testing
 cleanup () {{
@@ -149,7 +149,7 @@ FLOOP_CLOUD_TEST=true FLOOP_CLOUD_CORES={}:{} pytest --cov-report term-missing -
         InstanceType=os.environ.get('DEFAULT_INSTANCE_TYPE') or 't2.nano',
         MinCount=1,
         MaxCount=1,
-        InstanceInitiatedShutdownBehavior='terminate',
+        InstanceInitiatedShutdownBehavior='stop',
         UserData=init_script
     )
 
