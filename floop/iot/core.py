@@ -288,7 +288,7 @@ class Core(object):
         '''
         sys_string = '{} ssh {} {}'.format(
             self.host_docker_machine_bin, self.core, command)
-        out, err = syscall(sys_string, check=check, verbose=verbose)
+        out, _ = syscall(sys_string, check=check, verbose=verbose)
         return out
 
 def __log(core: Core, level: str, message: str) -> None:

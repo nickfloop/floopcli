@@ -122,9 +122,9 @@ base=https://github.com/docker/machine/releases/download/v0.14.0 &&\
   curl -L $base/docker-machine-$(uname -s)-$(uname -m) >/tmp/docker-machine &&\
   sudo install /tmp/docker-machine /usr/local/bin/docker-machine
 
-# start "target" ec2 instances as AWS Docker Machines
-{} &\
-{} &\
+# start "target" ec2 instances as AWS Docker Machines, add ubuntu to docker group
+{} && docker-machine ssh {} usermod -aG docker ubuntu & \
+{} && docker-machine ssh {} usermod -aG docker ubuntu & \
 wait
 
 # run pytest on floop-cli, set cloud test env variable to true
