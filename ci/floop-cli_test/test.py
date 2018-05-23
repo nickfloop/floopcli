@@ -151,7 +151,7 @@ FLOOP_CLOUD_TEST=true FLOOP_CLOUD_CORES={}:{} pytest --cov-report term-missing -
         MaxCount=1,
         InstanceInitiatedShutdownBehavior='stop',
         UserData=init_script,
-        KeyName='floop-cli-test-key'
+        KeyName='FLOOP_CLI_KEY'
     )
 
     instance_id = instance['Instances'][0]['InstanceId']
