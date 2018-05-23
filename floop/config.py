@@ -158,6 +158,7 @@ class Config(object):
         raw_config = _read_json(config_file)
         # throws malformed errors
         config = _flatten(raw_config)
+        print(config)
         addresses = [] #type: List[str]
         for core in config:
             if core['address'] in addresses:
