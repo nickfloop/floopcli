@@ -250,12 +250,12 @@ def fixture_missing_property_config_file(request):
     config_file = fixture_valid_config_file(request)
     with open(config_file, 'r') as cf:
         data = json.load(cf)
-    core_config = data['groups']['group0']['cores']['core0']
+    core_config = data['groups']['group0']['cores'][_TEST_CORE_NAME]
     del core_config['user']
     default_config = data['groups']['group0']['cores']['default']
     data['groups']['group0']['cores'] = {
             'default' : default_config, 
-            'core0' : core_config}
+            _TEST_CORE_NAME : core_config}
     with open(config_file, 'w') as cf:
         json.dump(data, cf)
     return config_file
