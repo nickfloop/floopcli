@@ -233,9 +233,7 @@ class TestDestroy():
             fixture_valid_config_file,
             fixture_docker_machine_wrapper):
         enforce_docker_machine = fixture_docker_machine_wrapper
-        for base in fixture_cli_base:
-            enforce_docker_machine()
-            syscall('{} destroy'.format(base), check=False)
+        for base in fixture_cli_base[-1:]:
             enforce_docker_machine()
             syscall('{} destroy -v'.format(base), check=False)
 

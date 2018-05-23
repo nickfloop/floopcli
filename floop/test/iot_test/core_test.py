@@ -100,5 +100,6 @@ def test_core_test_docker_test_fail_fails(fixture_valid_core,
     with pytest.raises(CoreTestException):
         test(fixture_valid_core)
 
-def test_core_destroy(fixture_valid_core, fixture_valid_target_directory):
-    destroy(fixture_valid_core)
+if os.environ.get('FLOOP_CLOUD_TEST') is None:
+    def test_core_destroy(fixture_valid_core, fixture_valid_target_directory):
+        destroy(fixture_valid_core)
