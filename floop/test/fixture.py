@@ -15,8 +15,11 @@ FLOOP_TEST_CONFIG_FILE = './floop.json'
 
 FLOOP_TEST_CONFIG = _FLOOP_CONFIG_DEFAULT_CONFIGURATION
 
-_TEST_CORE_NAME = \
-        environ.get('FLOOP_CLOUD_CORES').split(':')[0] or 'core0'
+_TEST_FLOOP_CLOUD_CORES = environ.get('FLOOP_CLOUD_CORES')
+
+_TEST_CORE_NAME = 'core0' 
+if _TEST_FLOOP_CLOUD_CORES  is not None:
+    _TEST_CORE_NAME = _TEST_FLOOP_CLOUD_CORES.split(':')[0]
 
 _DEVICE_TEST_SRC_DIRECTORY = '{}/src/'.format(dirname(
     abspath(__file__))
@@ -61,12 +64,21 @@ def fixture_valid_docker_machine():
         syscall(create_local_machine, check=False)
 
 @pytest.fixture(scope='function')
+def fixture_valid_target_directory():
+    if environ.get('FLOOP_LOCAL_HARDWARE_TEST'):
+        pass
+    elif environ.get('FLOOP_CLOUD_TEST'):
+        return '/home/ubuntu/floop'
+    else: 
+        return '/home/floop/floop'
+
+@pytest.fixture(scope='function')
 def fixture_valid_core_config(request):
     if environ.get('FLOOP_LOCAL_HARDWARE_TEST'):
         pass
     elif environ.get('FLOOP_CLOUD_TEST'):
         return {'address' : '192.168.1.100',
-                'target_source' : '/home/floop/floop/',
+                'target_source' : fixture_valid_target_directory(), 
                 'group' : 'group0',
                 'host_docker_machine_bin' : fixture_docker_machine_bin(), 
                 'host_key' :  '~/.ssh/id_rsa', 
@@ -76,7 +88,7 @@ def fixture_valid_core_config(request):
                 'user' : 'floop'}
     else: 
         return {'address' : '192.168.1.100',
-                'target_source' : '/home/floop/floop/',
+                'target_source' : fixture_valid_target_directory(), 
                 'group' : 'group0',
                 'host_docker_machine_bin' : fixture_docker_machine_bin(), 
                 'host_key' :  '~/.ssh/id_rsa', 
@@ -107,7 +119,7 @@ def fixture_valid_config_file(request):
         for idx, core in enumerate(cloud_cores):
             data['groups']['group0']['cores'][core] = {
                 'address' : '192.168.1.' + str(idx),
-                'target_source' : '/home/floop/floop',
+                'target_source' : '/home/ubuntu/floop',
                 'user' : 'floop',
                 'host_key' : '~/.ssh/id_rsa'
             }
@@ -167,10 +179,6 @@ def fixture_valid_src_directory(request):
             rmtree(src_dir)
     request.addfinalizer(cleanup)
     return src_dir
-
-@pytest.fixture(scope='function')
-def fixture_valid_target_directory():
-    return '/home/floop/floop'
 
 @pytest.fixture(scope='function')
 def fixture_buildfile(request):
