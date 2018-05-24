@@ -2,6 +2,7 @@ import logging
 import sys
 import pytest
 import os
+import signal
 
 from subprocess import check_output
 from os.path import isfile, isdir, expanduser
@@ -316,7 +317,7 @@ def __log(core: Core, level: str, message: str) -> None:
 ###  parallelizable methods that act on Core objects
 # these functions are pickle-able, but class methods are NOT
 # so these functions can be passed to multiprocessing.Pool
-def create(core: Core, check: bool=True) -> None:
+def create(core: Core, check: bool=True, timeout: int=120) -> None:
     '''
     Parallelizable; create new docker-machine on target core
 
@@ -331,6 +332,8 @@ def create(core: Core, check: bool=True) -> None:
             core creation failed during docker-machine create or
             'pwd' check failed
     '''
+    def timeout_handler(signum, frame):
+        raise SystemCallException('Create core timed out')
     create_command = '{} create --driver generic --generic-ip-address {} --generic-ssh-user {} --generic-ssh-key {} --engine-storage-driver overlay {}'.format(
         core.host_docker_machine_bin,
         core.address, 
@@ -338,6 +341,8 @@ def create(core: Core, check: bool=True) -> None:
         core.host_key, 
         core.core)
     __log(core, 'info', create_command)
+    signal.signal(signal.SIGALRM, timeout_handler)
+    signal.alarm(timeout)
     try:
         out, _ = syscall(create_command, check=False)
         __log(core, 'info', out)
@@ -347,14 +352,7 @@ def create(core: Core, check: bool=True) -> None:
             outd = core.run_ssh_command('pwd', check=check)
             __log(core, 'info', outd)
     except SystemCallException as e:
-        force_destroy_command = '{0} rm -f {1}'.format(core.host_docker_machine_bin, core.core)
-        __log(core, 
-                'error',
-                'Cleaning up failed docker machine: {}'.format(
-                    force_destroy_command))
-        out, err = syscall(force_destroy_command, check=False)
-        __log(core, 'error', str((out, err)))
-        __log(core, 'error', str(e))
+        print(str(e))
         raise CoreCreateException(str(e))
 
 def push(core: Core, check: bool=True) -> None:
@@ -551,6 +549,7 @@ def destroy(core: Core,
         :py:class:`floop.core.core.CoreDestroyException`:
             destroy commands returned non-zero exit code
     '''
+    print('destroy')
     try:
         # can call docker-machine ssh commands or syscall commands 
         rm_target_source = ('ssh', 'rm -rf {}'.format(core.target_source))
@@ -569,9 +568,11 @@ def destroy(core: Core,
             if kind == 'ssh':
                 out = core.run_ssh_command(command=command, check=check, verbose=verbose())
                 __log(core, 'info', out)
+                print(out)
             elif kind =='sys':
                 out, err = syscall(command=command, check=check)
                 __log(core, 'info', str((out, err)))
+                print(out)
     # TODO: find a case where init succeeds but destroy fails, enforce idempotency
     except SystemCallException as e:
         __log(core, 'error', str(e))

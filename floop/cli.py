@@ -2,6 +2,7 @@ import argparse
 import json
 import logging
 
+from functools import partial
 from multiprocessing import Pool
 from os import makedirs, remove 
 from os.path import isfile, dirname, expanduser, abspath
@@ -283,11 +284,16 @@ class FloopCLI(object):
         parser.add_argument('-v', '--verbose',
                 help='Print system commands and results to stdout',
                 action='store_true')
+        parser.add_argument('-t', '--timeout',
+                help='Time to wait during creation before raising error')
         args = parser.parse_args(argv[self.command_index:])
         if not args.verbose:
             quiet()
+        timeout = 120
+        if args.timeout:
+            timeout = int(args.timeout)
         with Pool() as pool:
-            pool.map(create, self.cores)
+            pool.map(partial(create, timeout=timeout), self.cores)
 
     def ps(self) -> None:
         '''
@@ -413,6 +419,7 @@ class FloopCLI(object):
 
         Does not remove local source code, builds, test, or logs.
         '''
+        print('destroy0')
         parser = argparse.ArgumentParser(
                 description='Destroy project, code, and environment on core(s) but not host')
         parser.add_argument('-v', '--verbose',

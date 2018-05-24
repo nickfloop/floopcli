@@ -13,7 +13,7 @@ from time import time
 Note:
     AWS_DEFAULT_REGION, AWS_ACCESS_KEY, AWS_SECRET_KEY are protected by Lambda
     Add a trailing _ to define your own. Make sure these values are defined
-    in the Lambda dashboard..
+    in the Lambda dashboard...
 '''
 
 def decrypt(key):
@@ -82,6 +82,9 @@ set -e
 
 # force shutdown and terminate after a time limit, even if processes are running
 shutdown -H 15 
+
+# don't run as root
+su ubuntu
 
 # try to get ec2 to give any relevant information
 exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
