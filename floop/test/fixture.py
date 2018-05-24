@@ -153,6 +153,25 @@ def fixture_malformed_config_file(request):
     return config_file
 
 @pytest.fixture(scope='function')
+def fixture_invalid_core_config_file(request):
+    config_file = fixture_valid_config_file(request)
+    with open(config_file, 'r') as cf:
+        data = json.load(cf)
+    cores = data['groups']['group0']['cores'].keys()
+    core = [c for c in cores if c != 'default'][0]
+    core_config = data['groups']['group0']['cores'][core]
+    for c in list(cores):
+        if c != 'default':
+            del data['groups']['group0']['cores'][c]
+    data['groups']['group0']['cores']['thisshouldnotwork'] = core_config 
+    print(data)
+    with open(config_file, 'w') as cf:
+        json.dump(data, cf)
+    return config_file
+
+
+
+@pytest.fixture(scope='function')
 def fixture_incomplete_config_file(request):
     config_file = fixture_valid_config_file(request)
     with open(config_file, 'r') as cf:

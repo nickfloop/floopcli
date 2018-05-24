@@ -196,7 +196,7 @@ class FloopCLI(object):
 \tCheck floop logs for this core: floop logs -m core-name\n\
 ''')
         except CoreCreateException as e:
-            exit('''Error| Create target core returned non-zero error\n\n\
+            exit('''Error| Create target core returned non-zero error or timed out\n\n\
 \tOptions to fix this error:\n\
 \tCheck that your target operating system has passwordless sudo for your SSH user\n\
 \tCheck that you have permission to access target_source for all cores\n\

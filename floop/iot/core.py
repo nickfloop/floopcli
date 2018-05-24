@@ -365,6 +365,7 @@ def create(core: Core, check: bool=True, timeout: int=120) -> None:
             outd = core.run_ssh_command('pwd', check=check)
             __log(core, 'info', outd)
     except SystemCallException as e:
+        __log(core, 'error', 'Create timed out')
         raise CoreCreateException(str(e))
 
 def push(core: Core, check: bool=True) -> None:

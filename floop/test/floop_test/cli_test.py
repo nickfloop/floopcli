@@ -240,6 +240,11 @@ class TestDestroy():
     #        out = syscall('{} destroy -v'.format(base), check=True)
     #        print(out)
 
+    def test_cli_destroy_nonexistent_core_is_idempotent(self,
+            fixture_cli_base, fixture_invalid_core_config_file):
+        syscall('floop destroy', check=True)
+        syscall('floop destroy', check=True)
+
     def test_cli_destroy_nonexistent_config_file_fails(self, fixture_cli_base):
         with pytest.raises(SystemCallException):
             for base in fixture_cli_base:
