@@ -332,7 +332,7 @@ def create(core: Core, check: bool=True, timeout: int=120) -> None:
             core creation failed during docker-machine create or
             'pwd' check failed
     '''
-    def timeout_handler(signum, frame):
+    def timeout_handler(signum, frame): #type: ignore
         raise SystemCallException('Create core timed out')
     create_command = '{} create --driver generic --generic-ip-address {} --generic-ssh-user {} --generic-ssh-key {} --engine-storage-driver overlay {}'.format(
         core.host_docker_machine_bin,
