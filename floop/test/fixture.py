@@ -78,6 +78,7 @@ def fixture_valid_core_config(request):
         pass
     elif environ.get('FLOOP_CLOUD_TEST'):
         return {'address' : '192.168.1.100',
+                'port' : '22',
                 'target_source' : fixture_valid_target_directory(), 
                 'group' : 'group0',
                 'host_docker_machine_bin' : fixture_docker_machine_bin(), 
@@ -88,6 +89,7 @@ def fixture_valid_core_config(request):
                 'user' : 'floop'}
     else: 
         return {'address' : '192.168.1.100',
+                'port' : '22',
                 'target_source' : fixture_valid_target_directory(), 
                 'group' : 'group0',
                 'host_docker_machine_bin' : fixture_docker_machine_bin(), 
@@ -119,11 +121,11 @@ def fixture_valid_config_file(request):
         for idx, core in enumerate(cloud_cores):
             data['groups']['group0']['cores'][core] = {
                 'address' : '192.168.1.' + str(idx),
+                'port' : '22',
                 'target_source' : '/home/ubuntu/floop',
                 'user' : 'floop',
                 'host_key' : '~/.ssh/id_rsa'
             }
-        print(data)
         with open(config_file, 'w') as cf:
             json.dump(data, cf)
         return config_file

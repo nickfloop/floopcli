@@ -22,6 +22,7 @@ _FLOOP_CONFIG_DEFAULT_CONFIGURATION = {
                 'core0' : {
                     'target_source' : '/home/floop/floop/',
                     'address' : '192.168.1.100', 
+                    'port' : '22',
                     'user' : 'floop',             
                     'host_key' : '~/.ssh/id_rsa', 
                 }
@@ -63,9 +64,6 @@ def _flatten(config : dict) -> List[dict]:
     # forces config to have default groups and cores
     except (TypeError, KeyError, AssertionError) as e:
         raise MalformedConfigException(str(e))
-
-#if __name__ == '__main__':
-#    print(_flatten({'groups': {'group0': {'cores': {'NPSYNUUZRDVOISSD15270591920877': {'target_source': '/home/floop/floop', 'user': 'floop', 'address': '192.168.1.0', 'host_key': '~/.ssh/id_rsa'}, 'PTRWLKBXPOLVSDOP15270591920877': {'target_source': '/home/floop/floop', 'user': 'floop', 'address': '192.168.1.1', 'host_key': '~/.ssh/id_rsa'}, 'default': {'host_source': '/floop-cli/floop/test/src/'}}}, 'default': {'host_docker_machine_bin': '/usr/local/bin/docker-machine', 'host_rsync_bin': '/usr/bin/rsync'}}}))
 
 class CannotSetImmutableAttributeException(Exception):
     '''
@@ -120,8 +118,11 @@ def _read_json(json_file : str) -> dict:
         dict:
             dictionary of json file content
     '''
-    with open(json_file) as j:
-        return json.load(j)
+    try:
+        with open(json_file) as j:
+            return json.load(j)
+    except json.decoder.JSONDecodeError:
+        raise MalformedConfigException('Invalid JSON')
 
 ConfigType = TypeVar('ConfigType', bound='Config')
 '''Generic self config type for stateful method return'''
@@ -162,7 +163,6 @@ class Config(object):
         raw_config = _read_json(config_file)
         # throws malformed errors
         config = _flatten(raw_config)
-        print(config)
         addresses = [] #type: List[str]
         for core in config:
             if core['address'] in addresses:

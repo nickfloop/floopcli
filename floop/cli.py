@@ -21,10 +21,12 @@ from floop.config import Config, \
 from floop.iot.core import build, create, destroy, ps, push, run, test, \
         CoreSourceNotFound, \
         CoreBuildException, \
+        CoreCreateException, \
         CoreRunException, \
         CoreTestException, \
         CoreCommunicationException, \
-        CorePSException
+        CorePSException, \
+        CoreDestroyException 
 
 logger = logging.getLogger(__name__)
 
@@ -191,6 +193,20 @@ class FloopCLI(object):
             exit('''Error| Build on target core returned non-zero error\n\n\
 \tOptions to fix this error:\n\
 \t--------------------------\n\
+\tCheck floop logs for this core: floop logs -m core-name\n\
+''')
+        except CoreCreateException as e:
+            exit('''Error| Create target core returned non-zero error\n\n\
+\tOptions to fix this error:\n\
+\tCheck that your target operating system has passwordless sudo for your SSH user\n\
+\tCheck that you have permission to access target_source for all cores\n\
+\tCheck floop logs for this core: floop logs -m core-name\n\
+''')
+        except CoreDestroyException as e:
+            exit('''Error| Destroy target core returned non-zero error\n\n\
+\tOptions to fix this error:\n\
+\tCheck that you have permission to access target_source for all cores\n\
+\tCheck that you have Internet access from the host\n\
 \tCheck floop logs for this core: floop logs -m core-name\n\
 ''')
         except CoreRunException as e:
@@ -419,7 +435,6 @@ class FloopCLI(object):
 
         Does not remove local source code, builds, test, or logs.
         '''
-        print('destroy0')
         parser = argparse.ArgumentParser(
                 description='Destroy project, code, and environment on core(s) but not host')
         parser.add_argument('-v', '--verbose',

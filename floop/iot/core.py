@@ -106,18 +106,14 @@ class Core(object):
 
     Args:
         address (str):
-            Core IP address (reachable by SSH)
         host_docker_machine_bin (str):
-            Full path to docker-machine binary
         core (str):
-            Core core (must match Docker machine core)
         ssh_key (str):
-            Path of SSH private key on host that corresponds to target core
         user (str):
-            Core SSH user
     '''
     def __init__(self,
             address: str,
+            port: str,
             target_source: str,
             group: str,
             host_docker_machine_bin: str,
@@ -130,6 +126,8 @@ class Core(object):
 
         self.address = address
         '''Core IP address (reachable by SSH)'''
+        self.port = port
+        '''Core SSH port'''
         self.target_source = target_source
         '''Directory on the target operating system to store files'''
         self.group = group
@@ -158,6 +156,16 @@ class Core(object):
         if hasattr(self, 'address'):
             raise CannotSetImmutableAttribute('address')
         self.__address = value
+
+    @property
+    def port(self) -> str:
+        return self.__port
+
+    @port.setter
+    def port(self, value: str) -> None:
+        if hasattr(self, 'port'):
+            raise CannotSetImmutableAttribute('port')
+        self.__port = value
 
     @property
     def target_source(self) -> str:
@@ -308,11 +316,12 @@ def __log(core: Core, level: str, message: str) -> None:
             message to log
     '''
     if hasattr(logger, level):
-        message = '{} (target) - {}: {}'.format(
-                core.core,
-                sys._getframe(1).f_code.co_name,
-                message)
-        getattr(logger, level)(message)
+        for line in message.split('\n'):
+            line = '{} (target) - {}: {}'.format(
+                    core.core,
+                    sys._getframe(1).f_code.co_name,
+                    line)
+            getattr(logger, level)(line)
 
 ###  parallelizable methods that act on Core objects
 # these functions are pickle-able, but class methods are NOT
@@ -327,6 +336,9 @@ def create(core: Core, check: bool=True, timeout: int=120) -> None:
         check (bool):
             if True, check core creation succeeded by running
             'pwd' via docker-machine SSH on newly created core
+        timeout (int):
+            time in seconds to wait for success before throwing error
+            (docker-machine create timeout is too long)
     Raises:
         :py:class:`floop.core.core.CoreCreateException`:
             core creation failed during docker-machine create or
@@ -334,9 +346,10 @@ def create(core: Core, check: bool=True, timeout: int=120) -> None:
     '''
     def timeout_handler(signum, frame): #type: ignore
         raise SystemCallException('Create core timed out')
-    create_command = '{} create --driver generic --generic-ip-address {} --generic-ssh-user {} --generic-ssh-key {} --engine-storage-driver overlay {}'.format(
+    create_command = '{} create --driver generic --generic-ip-address {} --generic-ssh-port {} --generic-ssh-user {} --generic-ssh-key {} --engine-storage-driver overlay {}'.format(
         core.host_docker_machine_bin,
         core.address, 
+        core.port,
         core.user, 
         core.host_key, 
         core.core)
@@ -344,7 +357,7 @@ def create(core: Core, check: bool=True, timeout: int=120) -> None:
     signal.signal(signal.SIGALRM, timeout_handler)
     signal.alarm(timeout)
     try:
-        out, _ = syscall(create_command, check=False)
+        out, err = syscall(create_command, check=False, verbose=verbose())
         __log(core, 'info', out)
         if check:
             check_command = 'pwd'
@@ -352,7 +365,6 @@ def create(core: Core, check: bool=True, timeout: int=120) -> None:
             outd = core.run_ssh_command('pwd', check=check)
             __log(core, 'info', outd)
     except SystemCallException as e:
-        print(str(e))
         raise CoreCreateException(str(e))
 
 def push(core: Core, check: bool=True) -> None:
@@ -549,30 +561,27 @@ def destroy(core: Core,
         :py:class:`floop.core.core.CoreDestroyException`:
             destroy commands returned non-zero exit code
     '''
-    print('destroy')
     try:
         # can call docker-machine ssh commands or syscall commands 
-        rm_target_source = ('ssh', 'rm -rf {}'.format(core.target_source))
-        uninstall_docker = ('ssh', 'sudo apt-get purge -y docker-ce || true')
+        # rm_target_source = ('ssh', 'rm -rf {}'.format(core.target_source))
+        # uninstall_docker = ('ssh', 'sudo apt-get purge -y docker-ce || true')
         rm_core = ('sys', '{} rm -f {}'.format(
             core.host_docker_machine_bin, core.core))
         # order matters
         commands = [
-                rm_target_source,
-                uninstall_docker,
+                #rm_target_source,
+                #uninstall_docker,
                 rm_core
                 ]
         for command_ in commands:
             kind, command = command_
             __log(core, 'info', command)
-            if kind == 'ssh':
-                out = core.run_ssh_command(command=command, check=check, verbose=verbose())
-                __log(core, 'info', out)
-                print(out)
-            elif kind =='sys':
+            #if kind == 'ssh':
+            #    out = core.run_ssh_command(command=command, check=check, verbose=verbose())
+            #    __log(core, 'info', out)
+            if kind =='sys':
                 out, err = syscall(command=command, check=check)
                 __log(core, 'info', str((out, err)))
-                print(out)
     # TODO: find a case where init succeeds but destroy fails, enforce idempotency
     except SystemCallException as e:
         __log(core, 'error', str(e))
