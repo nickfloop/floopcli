@@ -174,8 +174,8 @@ base=https://github.com/docker/machine/releases/download/v0.14.0 &&\
   sudo install /tmp/docker-machine /usr/local/bin/docker-machine
 
 # start "target" ec2 instances as AWS Docker Machines, add ubuntu to docker group
-{dmstr0} && docker-machine ssh {} sudo usermod -aG docker ubuntu
-{dmstr1} && docker-machine ssh {} sudo usermod -aG docker ubuntu
+{dmstr0} && docker-machine ssh {dm0} sudo usermod -aG docker ubuntu
+{dmstr1} && docker-machine ssh {dm1} sudo usermod -aG docker ubuntu
 
 # run pytest on floop-cli, set cloud test env variable to true
 FLOOP_CLOUD_TEST=true FLOOP_CLOUD_CORES={dm0}:{dm1} pytest --cov-report term-missing --cov=floop -v -s -x floop
@@ -194,6 +194,8 @@ aws s3 sync docs/s3/ s3://docs.forward-loop.com --delete
         dmstr0=docker_machine_string(cores[0]),
         dmstr1=docker_machine_string(cores[1]),
     )
+
+    print(init_script)
 
     instance = ec2.run_instances(
         # use env default or default AMI for ap-southeast-1
