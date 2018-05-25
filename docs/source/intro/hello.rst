@@ -124,7 +124,7 @@ To start, we will make a simple app to print "Hello, World!" to the console. We 
 
         Add the following code to a file called **hello.py**:
 
-        .. literalinclude:: ../../../example/src/python/hello.py
+        .. literalinclude:: ../../../example/python/hello/hello.py
             :language: python
 
         We need a test suite to test our *hello* function.
@@ -132,7 +132,7 @@ To start, we will make a simple app to print "Hello, World!" to the console. We 
 
         Add the following code to a file called **hello_test.py**:
 
-        .. literalinclude:: ../../../example/src/python/hello_test.py
+        .. literalinclude:: ../../../example/python/hello/hello_test.py
             :language: python
 
         In order for Python to consider our **src** folder as a package so that we can import code from **hello.py** into **hello_test.py**, add a blank file called **__init__.py**:
@@ -165,13 +165,13 @@ Since testing often requires different dependencies and run behavior than a prod
 
         To accomplish these steps, add the following code to a file called **Dockerfile.test**:
 
-        .. literalinclude:: ../../../example/cpp/hello/src/Dockerfile.test
+        .. literalinclude:: ../../../example/cpp/hello/Dockerfile.test
            
         At the end of the **Dockerfile.test** environment, it calls a script called **test.sh**. This script should compile all the code that needs to be tested, then run that code inside of the test environment.
 
         Add the following code to a file called **test.sh**:
 
-        .. literalinclude:: ../../../example/cpp/hello/src/test.sh
+        .. literalinclude:: ../../../example/cpp/hello/test.sh
 
         Now when we run our floop tests, we will automatically re-compile all new code alongside our testing utilities, then run the tests.
 
@@ -181,13 +181,13 @@ Since testing often requires different dependencies and run behavior than a prod
 
         To accomplish these steps, add the following code to a file called **Dockerfile**:
 
-        .. literalinclude:: ../../../example/cpp/hello/src/Dockerfile
+        .. literalinclude:: ../../../example/cpp/hello/Dockerfile
 
         At the end of the **Dockerfile** environment, it calls a script called **run.sh**. This script should compile all the code that needs to be run then run that code inside of the run environment.
 
         Add the following code to a file called **run.sh**:
 
-        .. literalinclude:: ../../../example/cpp/hello/src/run.sh
+        .. literalinclude:: ../../../example/cpp/hello/run.sh
 
         Now when we run our code, we will automatically re-compile all new code alongside our production utilities, then run the final binary.
         
@@ -201,7 +201,7 @@ Since testing often requires different dependencies and run behavior than a prod
 
         To accomplish these steps, add the following code to a file called **Dockerfile.test**:
 
-        .. literalinclude:: ../../../example/src/python/Dockerfile.test
+        .. literalinclude:: ../../../example/python/hello/Dockerfile.test
 
         At the end of the **Dockerfile.test** environment, it calls Python to run pytest on our project.
 
@@ -211,7 +211,7 @@ Since testing often requires different dependencies and run behavior than a prod
 
         To accomplish these steps, add the following code to a file called **Dockerfile**:
 
-        .. literalinclude:: ../../../example/src/python/Dockerfile
+        .. literalinclude:: ../../../example/python/hello/Dockerfile
 
     Now we are ready to build, test, and run our app with floop.
 
