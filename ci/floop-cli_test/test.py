@@ -93,7 +93,7 @@ def lambda_handler(event, context):
     init_script = '''#!/bin/bash
 
 # if any command fails, just clean up and exit
-set -ex
+set -e
 
 # force shutdown and terminate after a time limit, even if processes are running
 shutdown -H 15 
