@@ -106,20 +106,37 @@ exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
 
 # clean up function to run at the end of testing
 cleanup () {{
-    docker-machine rm -f {}
-    docker-machine rm -f {}
+    docker-machine rm -f {dm0} || true
+    docker-machine rm -f {dm1} || true
     shutdown -H now
 }}
 
+error () {{
+    # copy the failing build badge to the status URL
+    aws s3 cp s3://docs.forward-loop.com/status/build-failing.png \
+            s3://docs.forward-loop.com/floop-cli/{branch}/status/status.png || true
+    cleanup()
+}}
+
+success () {{
+    # copy the passing build badge to the status URL
+    aws s3 cp s3://docs.forward-loop.com/status/build-passing.png \
+            s3://docs.forward-loop.com/floop-cli/{branch}/status/status.png || true
+    cleanup()
+}}
+
 # no matter what happens, call cleanup
-trap cleanup EXIT ERR INT TERM SIGINT SIGTERM SIGHUP
+# trap errors
+trap error ERR INT TERM SIGINT SIGTERM SIGHUP
+# trap success
+trap success EXIT 
 
 # install system dependencies
 sudo apt-get update && sudo apt-get install -y curl git rsync python3-pip
 
 mkdir -p ~/.ssh/
 # the SSH_KEY env variable must contain slash-n newline characters
-echo -e "{}" > ~/.ssh/id_rsa && chmod 700 ~/.ssh/id_rsa
+echo -e "{sshkey}" > ~/.ssh/id_rsa && chmod 700 ~/.ssh/id_rsa
 cat ~/.ssh/id_rsa
 ssh-keyscan github.com >> ~/.ssh/known_hosts
 GIT_SSH_COMMAND='ssh -i ~/.ssh/id_rsa' \
@@ -127,16 +144,26 @@ GIT_SSH_COMMAND='ssh -i ~/.ssh/id_rsa' \
         floop-cli
 
 # checkout the commit that was just pushed
-cd floop-cli && git checkout {}
+cd floop-cli && git checkout {commit}
 
 # install awscli to use s3 sync
 sudo pip3 install awscli
+
+# configure aws with env variables
+aws configure set aws_access_key_id {awskey} 
+aws configure set aws_secret_access_key {awssecret} 
+aws configure set default.region {awsregion} 
+
+# copy the pending build badge to the status URL
+aws s3 cp s3://docs.forward-loop.com/status/build-pending.png \
+        s3://docs.forward-loop.com/floop-cli/{branch}/status/status.png
 
 # local install floop-cli
 sudo pip3 install -e .
 
 # build the docs and move to a named folder for s3
-cd docs && make html && mkdir -p s3/floop-cli/{}/ && cp -r build/html/* s3 && cd ..
+cd docs && make html && mkdir -p s3/floop-cli/{branch}/ && \
+        cp -r build/html/* s3/floop-cli/{branch}/ && cd ..
 
 # check static typing
 mypy --ignore-missing-imports --disallow-untyped-defs floop/
@@ -147,28 +174,25 @@ base=https://github.com/docker/machine/releases/download/v0.14.0 &&\
   sudo install /tmp/docker-machine /usr/local/bin/docker-machine
 
 # start "target" ec2 instances as AWS Docker Machines, add ubuntu to docker group
-#{} && docker-machine ssh {} sudo usermod -aG docker ubuntu
-#{} && docker-machine ssh {} sudo usermod -aG docker ubuntu
+{dmstr0} && docker-machine ssh {} sudo usermod -aG docker ubuntu
+{dmstr1} && docker-machine ssh {} sudo usermod -aG docker ubuntu
 
 # run pytest on floop-cli, set cloud test env variable to true
-#FLOOP_CLOUD_TEST=true FLOOP_CLOUD_CORES={}:{} pytest --cov-report term-missing --cov=floop -v -s -x floop
+FLOOP_CLOUD_TEST=true FLOOP_CLOUD_CORES={dm0}:{dm1} pytest --cov-report term-missing --cov=floop -v -s -x floop
 
 # sync documentation to docs website
-aws configure set aws_access_key_id $AWS_ACCESS_KEY_ 
-aws configure set aws_secret_access_key $AWS_SECRET_KEY_
 aws s3 sync docs/s3/ s3://docs.forward-loop.com --delete
 '''.format(
-        cores[0],
-        cores[1],
-        decrypt('SSH_KEY'),
-        commit,
-        branch,
-        docker_machine_string(cores[0]),
-        cores[0],
-        docker_machine_string(cores[1]),
-        cores[1],
-        cores[0],
-        cores[1]
+        dm0=cores[0],
+        dm1=cores[1],
+        sshkey=decrypt('SSH_KEY'),
+        commit=commit,
+        awskey=decrypt('AWS_ACCESS_KEY_'),
+        awssecret=decrypt('AWS_SECRET_KEY_'), 
+        awsregion=decrypt('AWS_DEFAULT_REGION_'),
+        branch=branch,
+        dmstr0=docker_machine_string(cores[0]),
+        dmstr1=docker_machine_string(cores[1]),
     )
 
     instance = ec2.run_instances(
