@@ -129,14 +129,14 @@ GIT_SSH_COMMAND='ssh -i ~/.ssh/id_rsa' \
 # checkout the commit that was just pushed
 cd floop-cli && git checkout {}
 
-# build the docs and move to a named folder for s3
-cd docs && make html && mkdir -p s3/floop-cli/{}/ && cp -r build/html/* s3 && cd ..
-
 # install awscli to use s3 sync
 sudo pip3 install awscli
 
 # local install floop-cli
 sudo pip3 install -e .
+
+# build the docs and move to a named folder for s3
+cd docs && make html && mkdir -p s3/floop-cli/{}/ && cp -r build/html/* s3 && cd ..
 
 # check static typing
 mypy --ignore-missing-imports --disallow-untyped-defs floop/
