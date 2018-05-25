@@ -178,6 +178,8 @@ FLOOP_CLOUD_TEST=true FLOOP_CLOUD_CORES={dm0}:{dm1} pytest --cov-report term-mis
 # sync documentation to docs website
 aws s3 sync docs/s3/ s3://docs.forward-loop.com
 
+aws s3 cp /var/log/user-data.log s3://docs.forward-loop.com/floop-cli/{branch]/status/log.txt
+
 # trap success
 trap success EXIT 
 '''.format(
