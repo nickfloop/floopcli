@@ -176,7 +176,7 @@ base=https://github.com/docker/machine/releases/download/v0.14.0 &&\
 FLOOP_CLOUD_TEST=true FLOOP_CLOUD_CORES={dm0}:{dm1} pytest --cov-report term-missing --cov=floop -v -s -x floop
 
 # sync documentation to docs website
-aws s3 sync docs/s3/ s3://docs.forward-loop.com --delete
+aws s3 sync docs/s3/ s3://docs.forward-loop.com
 
 # trap success
 trap success EXIT 
