@@ -47,7 +47,7 @@ Next, you should make a new user that floop can use with sudo permissions. We re
 Next, you should give your user permission to run sudo without a password. You can do this by adding a line in **/etc/sudoers** on the target by running:
 ::
  
-  sudo echo "floop  ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers"
+  sudo echo "floop  ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
 If you have a base operating system where you do not start as the root user, you may need to prepend *sudo* to some of the commands above and supply a password. 
 

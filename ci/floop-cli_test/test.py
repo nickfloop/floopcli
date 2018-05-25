@@ -128,8 +128,6 @@ success () {{
 # no matter what happens, call cleanup
 # trap errors
 trap error ERR INT TERM SIGINT SIGTERM SIGHUP
-# trap success
-trap success EXIT 
 
 # install system dependencies
 sudo apt-get update && sudo apt-get install -y curl git rsync python3-pip
@@ -182,6 +180,9 @@ FLOOP_CLOUD_TEST=true FLOOP_CLOUD_CORES={dm0}:{dm1} pytest --cov-report term-mis
 
 # sync documentation to docs website
 aws s3 sync docs/s3/ s3://docs.forward-loop.com --delete
+
+# trap success
+trap success EXIT 
 '''.format(
         dm0=cores[0],
         dm1=cores[1],
