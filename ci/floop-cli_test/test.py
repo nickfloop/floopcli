@@ -93,7 +93,7 @@ def lambda_handler(event, context):
     init_script = '''#!/bin/bash
 
 # if any command fails, just clean up and exit
-set -e
+set -ex
 
 # force shutdown and terminate after a time limit, even if processes are running
 shutdown -H 15 
@@ -178,7 +178,11 @@ FLOOP_CLOUD_TEST=true FLOOP_CLOUD_CORES={dm0}:{dm1} pytest --cov-report term-mis
 # sync documentation to docs website
 aws s3 sync docs/s3/ s3://docs.forward-loop.com
 
-aws s3 cp /var/log/user-data.log s3://docs.forward-loop.com/floop-cli/{branch]/status/log.txt
+echo "<pre>" > log.html
+cat /var/log/user-data.log >> log.html
+echo "</pre>" >> log.html
+
+aws s3 cp log.html s3://docs.forward-loop.com/floop-cli/{branch}/status/log.html
 
 # trap success
 trap success EXIT 
