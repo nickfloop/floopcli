@@ -173,16 +173,19 @@ base=https://github.com/docker/machine/releases/download/v0.14.0 &&\
 {dmstr1} && docker-machine ssh {dm1} sudo usermod -aG docker ubuntu
 
 # run pytest on floop-cli, set cloud test env variable to true
-FLOOP_CLOUD_TEST=true FLOOP_CLOUD_CORES={dm0}:{dm1} pytest --cov-report term-missing --cov=floop -v -s -x floop
+FLOOP_CLOUD_TEST=true FLOOP_CLOUD_CORES={dm0}:{dm1} pytest --cov-report term-missing --cov=floop -v -s -x floop >> test.txt 
 
 # sync documentation to docs website
 aws s3 sync docs/s3/ s3://docs.forward-loop.com
 
-echo "<pre>" > log.html
-cat /var/log/user-data.log >> log.html
-echo "</pre>" >> log.html
+# pipe test results into raw html
+echo "<pre>" > build.html
+echo "FOR MORE INFORMATION ABOUT THESE TESTS, VISIT THE ci/ FOLDER IN THIS BRANCH OF THE FLOOP REPO" >> build.html
+cat test.txt >> build.html
+echo "</pre>" >> build.html
 
-aws s3 cp log.html s3://docs.forward-loop.com/floop-cli/{branch}/status/log.html
+# push raw html to s3
+aws s3 cp build.html s3://docs.forward-loop.com/floop-cli/{branch}/status/build.html
 
 # trap success
 trap success EXIT 
@@ -199,6 +202,7 @@ trap success EXIT
         dmstr1=docker_machine_string(cores[1]),
     )
 
+    # these logs go to cloudwatch, not user-data.log  or /var/sys/log
     print(init_script)
 
     instance = ec2.run_instances(
