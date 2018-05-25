@@ -113,17 +113,15 @@ cleanup () {{
 
 error () {{
     # copy the failing build badge to the status URL
-    aws s3 cp s3://docs.forward-loop.com/status/build-failing.png \
-            s3://docs.forward-loop.com/floop-cli/{branch}/status/status.png || true
+    aws s3 cp s3://docs.forward-loop.com/status/build-failing.png s3://docs.forward-loop.com/floop-cli/{branch}/status/status.png || true
     cleanup()
 }}
 
-success () {{
+success () {
     # copy the passing build badge to the status URL
-    aws s3 cp s3://docs.forward-loop.com/status/build-passing.png \
-            s3://docs.forward-loop.com/floop-cli/{branch}/status/status.png || true
+    aws s3 cp s3://docs.forward-loop.com/status/build-passing.png s3://docs.forward-loop.com/floop-cli/{branch}/status/status.png || true
     cleanup()
-}}
+}
 
 # no matter what happens, call cleanup
 # trap errors
@@ -153,8 +151,7 @@ aws configure set aws_secret_access_key {awssecret}
 aws configure set default.region {awsregion} 
 
 # copy the pending build badge to the status URL
-aws s3 cp s3://docs.forward-loop.com/status/build-pending.png \
-        s3://docs.forward-loop.com/floop-cli/{branch}/status/status.png
+aws s3 cp s3://docs.forward-loop.com/status/build-pending.png s3://docs.forward-loop.com/floop-cli/{branch}/status/status.png
 
 # local install floop-cli
 sudo pip3 install -e .
