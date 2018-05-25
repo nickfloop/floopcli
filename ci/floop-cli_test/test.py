@@ -180,6 +180,7 @@ aws s3 sync docs/s3/ s3://docs.forward-loop.com
 
 # pipe test results into raw html
 echo "<pre>" > build.html
+date >> build.html
 echo "FOR MORE INFORMATION ABOUT THESE TESTS, VISIT THE ci/ FOLDER IN THIS BRANCH OF THE FLOOP REPO" >> build.html
 cat test.txt >> build.html
 echo "</pre>" >> build.html
