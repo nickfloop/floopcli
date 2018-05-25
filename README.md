@@ -1,5 +1,6 @@
 # floop
 [![build status badge](http://docs.forward-loop.com/floop-cli/ec2/status/status.png)](http://docs.forward-loop.com/floop-cli/ec2/status/log.txt)
+
 floop is a CLI tool for developing, building, and testing code on multiple target devices using a single host device. Currently, the tool works for Linux targets, including many ARM devices.
 
 ## Documentation

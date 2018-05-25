@@ -82,7 +82,7 @@ To start, we will make a simple app to print "Hello, World!" to the console. We 
         We need a function to print "Hello, World!" in order to test it
         outside of the main routine.
         
-        Add the following code to a file called **hello.cpp**:
+        Add the following code to a file called **src/hello.cpp**:
 
         .. literalinclude:: ../../../example/cpp/hello/src/hello.cpp
             :language: c++
@@ -90,7 +90,7 @@ To start, we will make a simple app to print "Hello, World!" to the console. We 
         We need a header file in order to share the *hello* function 
         between the main routine and the test routine.
 
-        Add the following code to a file called **hello.h**:
+        Add the following code to a file called **src/hello.h**:
             
         .. literalinclude:: ../../../example/cpp/hello/src/hello.h
             :language: c++
@@ -98,7 +98,7 @@ To start, we will make a simple app to print "Hello, World!" to the console. We 
         We need a test routine in order to test the *hello* function.
         We will use the Google Test library to run our tests.
 
-        Add the following code to a file called **hello_test.cpp**:
+        Add the following code to a file called **src/hello_test.cpp**:
 
         .. literalinclude:: ../../../example/cpp/hello/src/hello_test.cpp
             :language: c++
@@ -106,7 +106,7 @@ To start, we will make a simple app to print "Hello, World!" to the console. We 
         Finally, we need a main routine to run the *hello* function
         in production.
 
-        Add the following code to a file called **main.cpp**:
+        Add the following code to a file called **src/main.cpp**:
 
         .. literalinclude:: ../../../example/cpp/hello/src/main.cpp
             :language: c++

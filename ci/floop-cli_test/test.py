@@ -114,14 +114,14 @@ cleanup () {{
 error () {{
     # copy the failing build badge to the status URL
     aws s3 cp s3://docs.forward-loop.com/status/build-failing.png s3://docs.forward-loop.com/floop-cli/{branch}/status/status.png || true
-    cleanup()
+    cleanup
 }}
 
-success () {
+success () {{
     # copy the passing build badge to the status URL
     aws s3 cp s3://docs.forward-loop.com/status/build-passing.png s3://docs.forward-loop.com/floop-cli/{branch}/status/status.png || true
-    cleanup()
-}
+    cleanup
+}}
 
 # no matter what happens, call cleanup
 # trap errors
