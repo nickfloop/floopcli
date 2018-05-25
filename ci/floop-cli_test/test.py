@@ -147,17 +147,15 @@ base=https://github.com/docker/machine/releases/download/v0.14.0 &&\
   sudo install /tmp/docker-machine /usr/local/bin/docker-machine
 
 # start "target" ec2 instances as AWS Docker Machines, add ubuntu to docker group
-{} && docker-machine ssh {} sudo usermod -aG docker ubuntu
-{} && docker-machine ssh {} sudo usermod -aG docker ubuntu
+#{} && docker-machine ssh {} sudo usermod -aG docker ubuntu
+#{} && docker-machine ssh {} sudo usermod -aG docker ubuntu
 
 # run pytest on floop-cli, set cloud test env variable to true
-FLOOP_CLOUD_TEST=true FLOOP_CLOUD_CORES={}:{} pytest --cov-report term-missing --cov=floop -v -s -x floop
-
-# duplicate keys with names that awscli expects
-export AWS_ACCESS_KEY_ID=AWS_ACCESS_KEY_
-export AWS_SECRET_ACCESS_KEY=AWS_SECRET_KEY_
+#FLOOP_CLOUD_TEST=true FLOOP_CLOUD_CORES={}:{} pytest --cov-report term-missing --cov=floop -v -s -x floop
 
 # sync documentation to docs website
+aws configure set aws_access_key_id $AWS_ACCESS_KEY_ 
+aws configure set aws_secret_access_key $AWS_SECRET_KEY_
 aws s3 sync docs/s3/ s3://docs.forward-loop.com --delete
 '''.format(
         cores[0],
