@@ -61,15 +61,30 @@ def lambda_handler(event, context):
     if not validate_secret(event):
         return {
             'statusCode': 400,
-            'body': json.dumps({'input': event, 'error' : 'Invalid Github secret'})
+            'body': json.dumps({'error' : 'Invalid Github secret'})
         }
     try:
-        commit = json.loads(event['body'])['after']
+        body = json.loads(event['body'])
+    except (KeyError, json.decode.JSONDecodeError):
+        return {
+            'statusCode': 400,
+            'body': json.dumps({'error' : 'No body'})
+        }
+    try:
+        commit = body['after']
     except KeyError:
         return {
             'statusCode': 400,
             'body': json.dumps({'input': event, 'error' : 'No commit ID'})
         }
+    try:
+        branch = body['ref'].split('/')[-1]
+    except KeyError:
+        return {
+            'statusCode': 400,
+            'body': json.dumps({'input': event, 'error' : 'No branch?'})
+        }
+
     ec2 = get_client('ec2')
 
     cores = [docker_machine_name(), docker_machine_name()]
@@ -114,6 +129,12 @@ GIT_SSH_COMMAND='ssh -i ~/.ssh/id_rsa' \
 # checkout the commit that was just pushed
 cd floop-cli && git checkout {}
 
+# build the docs and move to a named folder for s3
+cd docs && make html && mkdir -p s3/floop-cli/{}/ && cp -r build/html/* s3 && cd ..
+
+# install awscli to use s3 sync
+sudo pip3 install awscli
+
 # local install floop-cli
 sudo pip3 install -e .
 
@@ -130,11 +151,20 @@ base=https://github.com/docker/machine/releases/download/v0.14.0 &&\
 {} && docker-machine ssh {} sudo usermod -aG docker ubuntu
 
 # run pytest on floop-cli, set cloud test env variable to true
-FLOOP_CLOUD_TEST=true FLOOP_CLOUD_CORES={}:{} pytest --cov-report term-missing --cov=floop -v -s -x floop'''.format(
+FLOOP_CLOUD_TEST=true FLOOP_CLOUD_CORES={}:{} pytest --cov-report term-missing --cov=floop -v -s -x floop
+
+# duplicate keys with names that awscli expects
+export AWS_ACCESS_KEY_ID=AWS_ACCESS_KEY_
+export AWS_SECRET_ACCESS_KEY=AWS_SECRET_KEY_
+
+# sync documentation to docs website
+aws s3 sync docs/s3/ s3://docs.forward-loop.com --delete
+'''.format(
         cores[0],
         cores[1],
         decrypt('SSH_KEY'),
         commit,
+        branch,
         docker_machine_string(cores[0]),
         cores[0],
         docker_machine_string(cores[1]),
@@ -142,8 +172,6 @@ FLOOP_CLOUD_TEST=true FLOOP_CLOUD_CORES={}:{} pytest --cov-report term-missing -
         cores[0],
         cores[1]
     )
-
-    print(init_script)
 
     instance = ec2.run_instances(
         # use env default or default AMI for ap-southeast-1
