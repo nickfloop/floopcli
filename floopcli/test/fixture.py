@@ -7,6 +7,7 @@ from os import remove, environ, mkdir
 from os.path import abspath, dirname, isfile, isdir
 
 from shutil import rmtree, which
+from typing import Dict
 
 from floopcli.config import _FLOOP_CONFIG_DEFAULT_CONFIGURATION
 from floopcli.util.syscall import syscall
@@ -37,7 +38,7 @@ def fixture_rsync_bin():
 def fixture_default_config_file(request):
     config_file = FLOOP_TEST_CONFIG_FILE
     config = FLOOP_TEST_CONFIG
-    def cleanup():
+    def cleanup() -> None:
         if isfile(config_file):
             remove(config_file)
     cleanup()
@@ -50,7 +51,7 @@ def fixture_default_config_file(request):
 # refactoring using different env variables
 
 @pytest.fixture(autouse=True)
-def fixture_valid_docker_machine():
+def fixture_valid_docker_machine() -> None:
     if environ.get('FLOOP_LOCAL_HARDWARE_TEST'):
         pass
     elif environ.get('FLOOP_CLOUD_TEST'):
@@ -66,16 +67,16 @@ def fixture_valid_docker_machine():
 @pytest.fixture(scope='function')
 def fixture_valid_target_directory():
     if environ.get('FLOOP_LOCAL_HARDWARE_TEST'):
-        pass
+        return ''
     elif environ.get('FLOOP_CLOUD_TEST'):
         return '/home/ubuntu/floop'
     else: 
         return '/home/floop/floop'
 
 @pytest.fixture(scope='function')
-def fixture_valid_core_config(request):
+def fixture_valid_core_config(request) -> Dict[str, str]:
     if environ.get('FLOOP_LOCAL_HARDWARE_TEST'):
-        pass
+        return {}
     elif environ.get('FLOOP_CLOUD_TEST'):
         return {'address' : '192.168.1.100',
                 'port' : '22',
@@ -101,7 +102,7 @@ def fixture_valid_core_config(request):
 
 
 @pytest.fixture(scope='function')
-def fixture_invalid_core_core_config(request):
+def fixture_invalid_core_core_config(request) -> Dict[str, str]:
     config = fixture_valid_core_config(request)
     config['core'] = 'thisshouldfail'
     return config
@@ -109,7 +110,7 @@ def fixture_invalid_core_core_config(request):
 @pytest.fixture(scope='function')
 def fixture_valid_config_file(request):
     if environ.get('FLOOP_LOCAL_HARDWARE_TEST'):
-        pass
+        return ''
     elif environ.get('FLOOP_CLOUD_TEST') is not None:
         cloud_cores = environ['FLOOP_CLOUD_CORES'].split(':')
         src_dir = fixture_valid_src_directory(request)
@@ -164,7 +165,6 @@ def fixture_invalid_core_config_file(request):
         if c != 'default':
             del data['groups']['group0']['cores'][c]
     data['groups']['group0']['cores']['thisshouldnotwork'] = core_config 
-    print(data)
     with open(config_file, 'w') as cf:
         json.dump(data, cf)
     return config_file
@@ -195,7 +195,7 @@ def fixture_valid_src_directory(request):
     if isdir(src_dir):
         rmtree(src_dir)
     mkdir(src_dir)
-    def cleanup():
+    def cleanup() -> None:
         if isdir(src_dir):
             rmtree(src_dir)
     request.addfinalizer(cleanup)
@@ -307,7 +307,6 @@ def fixture_protected_target_directory_config(request):
 
 @pytest.fixture(scope='function')
 def fixture_docker_machine_wrapper(request):
-    def wrapper():
+    def wrapper() -> None:
         fixture_valid_docker_machine()
     return wrapper
-

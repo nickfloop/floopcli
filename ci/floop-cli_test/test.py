@@ -56,7 +56,7 @@ def docker_machine_string(name):
 
 def lambda_handler(event, context):
     '''
-    AWS Lambda handler for floop-cli integration testing
+    AWS Lambda handler for floopcli integration testing
     '''
     if not validate_secret(event):
         return {
@@ -101,11 +101,23 @@ shutdown -H 15
 # don't run as root
 su ubuntu
 
-# try to get ec2 to give any relevant information
-exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
+# push logs that Github badge can link to
+log () {{
+    # just returns an empty log if it doesn't make it to pytest
+    touch /var/log/user-data.log
+    # pipe test results into raw html
+    echo "<pre>" > build.html
+    date >> build.html
+    echo "FOR MORE INFORMATION ABOUT THESE TESTS, VISIT THE ci/ FOLDER IN THIS BRANCH OF THE FLOOP REPO" >> build.html
+    cat /var/log/user-data.log >> build.html
+    echo "</pre>" >> build.html
+    # push raw html to s3
+    aws s3 cp build.html s3://docs.forward-loop.com/floopcli/{branch}/status/build.html
+}}
 
 # clean up function to run at the end of testing
 cleanup () {{
+    log
     docker-machine rm -f {dm0} || true
     docker-machine rm -f {dm1} || true
     shutdown -H now
@@ -113,13 +125,13 @@ cleanup () {{
 
 error () {{
     # copy the failing build badge to the status URL
-    aws s3 cp s3://docs.forward-loop.com/status/build-failing.png s3://docs.forward-loop.com/floop-cli/{branch}/status/run-status.png || true
+    aws s3 cp s3://docs.forward-loop.com/status/build-failing.png s3://docs.forward-loop.com/floopcli/{branch}/status/run-status.png || true
     cleanup
 }}
 
 success () {{
     # copy the passing build badge to the status URL
-    aws s3 cp s3://docs.forward-loop.com/status/build-passing.png s3://docs.forward-loop.com/floop-cli/{branch}/status/run-status.png || true
+    aws s3 cp s3://docs.forward-loop.com/status/build-passing.png s3://docs.forward-loop.com/floopcli/{branch}/status/run-status.png || true
     cleanup
 }}
 
@@ -137,10 +149,10 @@ cat ~/.ssh/id_rsa
 ssh-keyscan github.com >> ~/.ssh/known_hosts
 GIT_SSH_COMMAND='ssh -i ~/.ssh/id_rsa' \
         git clone git@github.com:nickfloop/floop-cli-private.git \
-        floop-cli
+        floopcli
 
 # checkout the commit that was just pushed
-cd floop-cli && git checkout {commit}
+cd floopcli && git checkout {commit}
 
 # install awscli to use s3 sync
 sudo pip3 install awscli
@@ -151,17 +163,17 @@ aws configure set aws_secret_access_key {awssecret}
 aws configure set default.region {awsregion} 
 
 # copy the pending build badge to the status URL
-aws s3 cp s3://docs.forward-loop.com/status/build-pending.png s3://docs.forward-loop.com/floop-cli/{branch}/status/run-status.png
+aws s3 cp s3://docs.forward-loop.com/status/build-pending.png s3://docs.forward-loop.com/floopcli/{branch}/status/run-status.png
 
-# local install floop-cli
+# local install floopcli
 sudo pip3 install -e .
 
 # build the docs and move to a named folder for s3
-cd docs && make html && mkdir -p s3/floop-cli/{branch}/ && \
-        cp -r build/html/* s3/floop-cli/{branch}/ && cd ..
+cd docs && make html && mkdir -p s3/floopcli/{branch}/ && \
+        cp -r build/html/* s3/floopcli/{branch}/ && cd ..
 
 # check static typing
-mypy --ignore-missing-imports --disallow-untyped-defs floop/
+mypy --config-file mypy.ini floopcli
 
 # install docker-machine
 base=https://github.com/docker/machine/releases/download/v0.14.0 &&\
@@ -172,21 +184,14 @@ base=https://github.com/docker/machine/releases/download/v0.14.0 &&\
 {dmstr0} && docker-machine ssh {dm0} sudo usermod -aG docker ubuntu
 {dmstr1} && docker-machine ssh {dm1} sudo usermod -aG docker ubuntu
 
-# run pytest on floop-cli, set cloud test env variable to true
-FLOOP_CLOUD_TEST=true FLOOP_CLOUD_CORES={dm0}:{dm1} pytest --cov-report term-missing --cov=floop -v -s -x floop >> test.txt 
+# try to get ec2 to give any relevant information
+exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
+
+# run pytest on floopcli, set cloud test env variable to true
+FLOOP_CLOUD_TEST=true FLOOP_CLOUD_CORES={dm0}:{dm1} pytest --cov-report term-missing --cov=floopcli -v -s -x floopcli
 
 # sync documentation to docs website
 aws s3 sync docs/s3/ s3://docs.forward-loop.com
-
-# pipe test results into raw html
-echo "<pre>" > build.html
-date >> build.html
-echo "FOR MORE INFORMATION ABOUT THESE TESTS, VISIT THE ci/ FOLDER IN THIS BRANCH OF THE FLOOP REPO" >> build.html
-cat test.txt >> build.html
-echo "</pre>" >> build.html
-
-# push raw html to s3
-aws s3 cp build.html s3://docs.forward-loop.com/floop-cli/{branch}/status/build.html
 
 # trap success
 trap success EXIT 
