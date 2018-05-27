@@ -1,5 +1,12 @@
 import pytest
-from floop.iot.core import create, build, run, push, ps, test, destroy, \
+import os
+import os.path
+import json
+from shutil import rmtree, which
+from copy import copy
+from floopcli.util.syscall import syscall
+from floopcli.test.fixture import *
+from floopcli.iot.core import create, build, run, push, ps, test, destroy, \
         Core, CoreCreateException, CannotSetImmutableAttribute, \
         SSHKeyNotFound, \
         CoreSourceNotFound, \
@@ -9,14 +16,6 @@ from floop.iot.core import create, build, run, push, ps, test, destroy, \
         CoreRunException, \
         CoreTestException, \
         CoreTestFileNotFound
-
-import os
-import os.path
-import json
-from shutil import rmtree, which
-from copy import copy
-from floop.util.syscall import syscall
-from floop.test.fixture import *
 
 @pytest.fixture(scope='function')
 def fixture_valid_core(request):

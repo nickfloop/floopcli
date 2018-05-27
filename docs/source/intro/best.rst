@@ -18,6 +18,8 @@ Each target device operating system you use should have a user with SSH access a
 
 Use *library* Docker Images
 ---------------------------
-When working with ARM targets, you should always base your **Dockerfile.test** and **Dockerfile** environments on images from the `Docker Hub Library <https://hub.docker.com/u/library/>`_. These images `work across platforms <https://blog.docker.com/2017/09/docker-official-images-now-multi-platform/>`_, including x86 and ARM. It is not guaranteed that other base images will build correctly on ARM hardware. In practice this means that all Dockerfiles should start with:
+When working with ARM targets, you should always base your **Dockerfile.test** and **Dockerfile** environments on images from the `Docker Hub Library <https://hub.docker.com/u/library/>`_. These images `work across platforms <https://blog.docker.com/2017/09/docker-official-images-now-multi-platform/>`_, including x86 and ARM. It is not guaranteed that other base images will build correctly on ARM hardware. In practice, this means that all Dockerfiles should start with:
 ::
     FROM library/...
+
+If you need a language or environment that is not provided as a *library* image, you can often build one yourself by installing on a base image such as **library/debian**.

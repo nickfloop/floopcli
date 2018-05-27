@@ -3,8 +3,8 @@ import pytest
 from os import remove
 from os.path import abspath, dirname, isfile
 
-from floop.config import Config, ConfigFileDoesNotExist, CannotSetImmutableAttributeException, MalformedConfigException, RedundantCoreConfigException
-from floop.test.fixture import *
+from floopcli.config import Config, ConfigFileDoesNotExist, CannotSetImmutableAttributeException, MalformedConfigException, RedundantCoreConfigException
+from floopcli.test.fixture import *
 
 def test_floop_config_init(fixture_valid_config_file):
     Config(fixture_valid_config_file)

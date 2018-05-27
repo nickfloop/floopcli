@@ -8,8 +8,8 @@ from os.path import abspath, dirname, isfile, isdir
 
 from shutil import rmtree, which
 
-from floop.config import _FLOOP_CONFIG_DEFAULT_CONFIGURATION
-from floop.util.syscall import syscall
+from floopcli.config import _FLOOP_CONFIG_DEFAULT_CONFIGURATION
+from floopcli.util.syscall import syscall
 
 FLOOP_TEST_CONFIG_FILE = './floop.json' 
 

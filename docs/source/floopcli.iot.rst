@@ -1,13 +1,13 @@
-floop.device package
+floopcli.device package
 ====================
 
 Submodules
 ----------
 
-floop.iot.core module
+floopcli.iot.core module
 --------------------------
 
-.. automodule:: floop.iot.core
+.. automodule:: floopcli.iot.core
     :members:
     :undoc-members:
     :show-inheritance:
@@ -16,7 +16,7 @@ floop.iot.core module
 Module contents
 ---------------
 
-.. automodule:: floop.iot
+.. automodule:: floopcli.iot
     :members:
     :undoc-members:
     :show-inheritance:

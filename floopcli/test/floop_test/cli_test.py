@@ -6,8 +6,8 @@ from os import remove
 from os.path import isfile
 from itertools import combinations
 
-from floop.util.syscall import syscall, SystemCallException
-from floop.test.fixture import * 
+from floopcli.util.syscall import syscall, SystemCallException
+from floopcli.test.fixture import * 
 
 @pytest.fixture(scope='function')
 def fixture_unknown_cli_commands():

@@ -1,6 +1,6 @@
 import pytest
 
-from floop.util.syscall import syscall, SystemCallException
+from floopcli.util.syscall import syscall, SystemCallException
 
 def test_syscall_pwd():
     syscall('pwd', check=True, verbose=True)

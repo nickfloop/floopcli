@@ -45,22 +45,23 @@ At least one of the following:
 
         You can use one or more Docker Machines running on your host. To see how to do this, check the `Docker Machine Tutorial <https://docs.docker.com/machine/get-started/>`_ for how to run local Docker Machines using Virtualbox. Once you install Docker Machine and local machine dependencies, you can typically start a new machine as follows: 
 
-        .. code-block:: bash
+.. code-block:: bash
 
-          #!/bin/bash
-          docker-machine create \
-          --driver virtualbox \
-          --virtualbox-memory 1024 \
-          core0
+  #!/bin/bash
+  docker-machine create \
+  --driver virtualbox \
+  --virtualbox-memory 1024 \
+  core0
 
-        That creates a new Docker Machine called *core0* with 1GB of virtual memory.
+That creates a new Docker Machine called *core0* with 1GB of virtual memory.
 
-        When you are finished, you can clean up as follows:
-        ::
-          #!/bin/bash
-          docker-machine rm -f core0
+When you are finished, you can clean up as follows:
+::
 
-        If you want to test floop with multiple local cores, you can use the procedure above to make new cores and name them whatever you want, removing them when you are finished.
+  #!/bin/bash
+  docker-machine rm -f core0
+
+If you want to test floop with multiple local cores, you can use the procedure above to make new cores and name them whatever you want, removing them when you are finished.
       
 
 1. Install Floop
@@ -75,9 +76,9 @@ To start, we will make a simple app to print "Hello, World!" to the console. We 
 
     .. tab:: C++ 
 
-        Make a new project folder with a src folder inside:
+        Make a new **project** folder with a **src** folder inside:
         ::
-            mkdir -p ./project/src && cd ./project
+            mkdir -p ./project/src/ && cd ./project/
        
         We need a function to print "Hello, World!" in order to test it
         outside of the main routine.
@@ -96,7 +97,7 @@ To start, we will make a simple app to print "Hello, World!" to the console. We 
             :language: c++
 
         We need a test routine in order to test the *hello* function.
-        We will use the Google Test library to run our tests.
+        We will use the `Google Test <https://github.com/google/googletest>`_ library to run our tests.
 
         Add the following code to a file called **src/hello_test.cpp**:
 
@@ -114,9 +115,9 @@ To start, we will make a simple app to print "Hello, World!" to the console. We 
 
     .. tab:: Python
 
-        Make a new project folder with a src folder inside:
+        Make a new **project** folder:
         ::
-            mkdir -p ./project/src && cd ./project
+            mkdir -p ./project/ && cd ./project/
 
         We need a function to print "Hello, World". This function
         will double as our main routine if the file containing
@@ -128,22 +129,49 @@ To start, we will make a simple app to print "Hello, World!" to the console. We 
             :language: python
 
         We need a test suite to test our *hello* function.
-        We will use the pytest library to run our tests. 
+        We will use the `pytest <https://docs.pytest.org/en/latest/>`_ library to run our tests. 
 
         Add the following code to a file called **hello_test.py**:
 
         .. literalinclude:: ../../../example/python/hello/hello_test.py
             :language: python
 
-        In order for Python to consider our **src** folder as a package so that we can import code from **hello.py** into **hello_test.py**, add a blank file called **__init__.py**:
+        In order for Python to consider our folder a package so that we can import code from **hello.py** into **hello_test.py**, add a blank file called **__init__.py**:
         ::
-            touch ./src/__init__.py
+            touch ./__init__.py
 
         Test our code on the host:
         ::
-            python ./src/hello.py
+            python ./hello.py
 
         You should see "Hello, World!" on the console.
+
+    .. tab:: Go 
+
+        Make a new **project** folder with a **src** folder inside with a **hello** folder and a **main** inside **src**:
+        ::
+
+            mkdir -p ./project/src/hello/ && \
+            mkdir -p ./project/src/main/ && \
+            cd ./project/
+
+        We need a function to print "Hello, World!" in order to test it outside of the main routine.
+
+        Add the following code to a file called **src/hello/hello.go**:
+
+        .. literalinclude:: ../../../example/go/hello/src/hello/hello.go
+
+        We need a test suite to test our *hello* function. We will use the native testing features in Go, so we have no external dependencies.
+
+        Add the following code to a file called **src/hello/hello_test.go**:
+
+        .. literalinclude:: ../../../example/go/hello/src/hello/hello_test.go
+
+        Finally, we need a main routine to run the *hello* function in production.
+
+        Add the following code to a file called **src/main/main.go**:
+
+        .. literalinclude:: ../../../example/go/hello/src/main/main.go
 
 We now have a simple app. In order to test and to run this app, we need to define test and run environments.
 
@@ -193,6 +221,10 @@ Since testing often requires different dependencies and run behavior than a prod
         
         :subscript:`(Note: in a real production environment, you are usually better off using a runtime environment with minimal dependencies and running a pre-built executable. However, this is beyond the scope of Hello, World!)`
 
+        The **test.sh** and **run.sh** scripts need to be executable, so give them execute permissions:
+        ::
+          chmod +x *.sh
+
     .. tab:: Python 
 
         First, define the test environment.
@@ -213,6 +245,25 @@ Since testing often requires different dependencies and run behavior than a prod
 
         .. literalinclude:: ../../../example/python/hello/Dockerfile
 
+    .. tab:: Go
+
+        First, define the test environment. 
+
+        We will start with a Debian Jessie operating system with Go already installed, then set the working directory and *GOPATH* environment variable to **/floop**, which is where our source code will be stored inside the Docker container on the target device, and finally set the default behavior of the environment to run the tests.
+
+        To accomplish these steps, add the following to a file called **Dockerfile.test**:
+
+        .. literalinclude:: ../../../example/go/hello/Dockerfile.test
+
+        Next, define the run environment.
+
+        As with the test environment, we will start with a Debian Jessie operating system image with Go already installed. We will set the working directory and *GOPATH* then set the default behavior of the environment to run the *main* routine.
+
+        To accomplish these steps, add the following to a file called **Dockerfile**:
+
+        .. literalinclude:: ../../../example/go/hello/Dockerfile
+
+
     Now we are ready to build, test, and run our app with floop.
 
 4. Configure the App with Floop
@@ -229,14 +280,14 @@ This will generate a default configuration called **floop.json**.
 
 This configuration is based on the following default values (this is a Python dictionary that gets written to JSON):
 
-.. literalinclude:: ../../../floop/config.py
-    :lines: 9-29
+.. literalinclude:: ../../../floopcli/config.py
+    :lines: 10-32
 
 :subscript:`(Note: The calls to the *which* function automatically set the path of docker-machine and rsync as they are installed on your system. If needed, you can edit floop.json to set the paths to each binary dependency. This may be useful if you need to use a different version of docker-machine or rsync than the default version for your system.)`
 
-From this we can describe the default configuration in plain language. All groups use the same rsync and docker-machine binaries. We define one group called *group0*. All cores in *group0* look to the *host_source* directory as their source code directory on the host. Within *group0* there is one core called *core0* that we can reach at its *address* using SSH access via the *user* and *host_key* on the host. When using floop, the *host_source* for *group0* will be pushed to *target_source* on *core0*. Currently, *core0* has no *cores*.
+From this we can describe the default configuration in plain language. All groups use the same rsync and docker-machine binaries. We define one group called *group0*. All cores in *group0* look to the *host_source* directory as their source code directory on the host. Within *group0* there is one core called *core0* that we can reach at its *address* using SSH access via the *user* and *host_key* on the host. When using floop, the *host_source* for *group0* will be pushed to *target_source* on *core0*.
 
-floop uses a compact configuration format that defines *default* key-values for groups and cores. A **group** is a collection of **cores**. A **core** runs an operating system (not firmware). floop automatically flattens the configuration file as follows:
+floop uses a compact configuration format that defines *default* key-values for groups and cores. A **group** is a collection of **cores**. A **core** runs an operating system. floop automatically flattens the configuration file as follows:
     - *default* key-values for **groups** become key-values for all groups
     - *default* key-values for **cores** become key-values for all cores in a group
     - key-values for specific cores overwrite key-values defined as *default* (for example, if you define *host_source* within *core0* then that will overwrite the *host_source* defined in *default*)
@@ -247,8 +298,7 @@ Applying the flattening procedure to the default configuration reveals that it d
 ::
     [
         {
-            'cores': [], 
-            'host_source': './src/', 
+            'host_source': './', 
             'core': 'core0', 
             'address': '192.168.1.100', 
             'host_docker_machine_bin': '/usr/local/bin/docker-machine', 
@@ -270,13 +320,13 @@ When you run floop, it will automatically copy code from *host_source* to *targe
 
         This is the option for using floop with real cores.
 
-        For ARM cores, you need to update each entry in *cores*. For example, if you have a target core that you want to call *core0* that can be reached at IP address **192.168.188** and that core runs an operating system that has a user called *ubuntu* (with corresponding user directory **/home/ubuntu/**) who uses **~/.ssh/floop.key** to SSH into your core, then you would configure floop as follows:
+        For ARM cores, you need to update each entry in *cores*. For example, if you have a target core that you want to call *core0* that can be reached at IP address **192.168.188** and that core runs an operating system that has a user called *floop* (with corresponding user directory **/home/floop/**) who uses **~/.ssh/floop.key** to SSH into your core, then you would configure floop as follows:
         ::
           ... # only showing core0 
           "core0" : {
-              "target_source' : '/home/ubuntu/floop/",
+              "target_source' : '/home/floop/floop/",
               "address' : '192.168.1.188", 
-              "user' : 'ubuntu",             
+              "user' : 'floop",             
               "host_key' : '~/.ssh/floop.key", 
           } 
 
@@ -292,6 +342,8 @@ When you run floop, it will automatically copy code from *host_source* to *targe
           docker-machine ls
 
 Note that all core names and addresses must be unique. 
+
+You are now ready to start communicating with target devices. Make sure that you run the following floop commands from the **project** folder you made for this guide.
 
 5. Create Floop Target Cores
 ==============================
@@ -320,7 +372,7 @@ Your code is now on all of your targets so we can build, run, or test it.
 
 7. Build Code on Targets
 ========================
-In order to build you code on all of your targets, you can run:
+In order to build your code on all of your targets, you can run:
 ::
 
   floop build
@@ -330,7 +382,7 @@ In order to build you code on all of your targets, you can run:
 Optionally, you can add the *-v* flag to see that floop always pushes before a build then builds your run environment using the **Dockerfile** for your app. 
 
 8. Test Code on Targets
-======================
+=======================
 You can run your test environment for your app by running:
 ::
 
@@ -383,13 +435,15 @@ When you are finished with this guide, you can destroy all the floop cores defin
 
   floop destroy
 
-:subscript:`(Note: floop destroys floop resources on all target cores and frees resources on the host. It does NOT remove your project or source from your host.)`
+:subscript:`(Note: floop destroy cores. It does NOT remove your project from your host.)`
 
-Optionally, you can add the *-v* flag to see that floop destroys cores by removing the *target_source* from all targets, uninstalling Docker from all targets, and removing Docker Machines from the host.
+Optionally, you can add the *-v* flag to see that floop destroys cores by removing Docker Machines from the host. This leaves the *target_source* directory on the target device. This also leaves Docker installed on the target device.
 
 If you followed this guide using more than one ARM core or Docker Machine, you may only want to destroy some of the floop cores you created before. In order to do this, you can remove all of the cores you want to destroy from your **floop.json** and add them to a new configuration file called **floop-destroy.json**. You can then destroy those cores using the *-c* flag for the floop command by running:
 ::
 
   floop -c floop-destroy.json destroy
 
-This will free floop-related resources from the cores defined in **floop-destroy.json** while leaving the remaining cores in **floop.json** untouched.
+This will destroy the cores defined in **floop-destroy.json** while leaving the remaining cores in **floop.json** untouched.
+
+For more information about how to use floop, check the :doc:`best`.

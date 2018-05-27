@@ -4,7 +4,7 @@ from time import time
 from os import rename
 from os.path import isdir, isfile
 from shutil import which
-from floop.iot.core import Core 
+from floopcli.iot.core import Core 
 from typing import Any, Dict, List, TypeVar
 
 # default config to write when using floop config 
@@ -17,7 +17,7 @@ _FLOOP_CONFIG_DEFAULT_CONFIGURATION = {
         'group0' :{
             'cores' : {
                 'default': {
-                    'host_source' : './src/'
+                    'host_source' : './'
                 },
                 'core0' : {
                     'target_source' : '/home/floop/floop/',
@@ -40,7 +40,7 @@ def _flatten(config : dict) -> List[dict]:
             config dictionary 
 
     Raises:
-        :py:class:`MalformedConfigException`:
+        :py:class:`floopcli.config.MalformedConfigException`:
             config has no default group, default core, and/or core address
     '''
     flat_config = []
@@ -154,7 +154,7 @@ class Config(object):
                 configuration file does not exist
 
         Returns:
-            :py:class:`floop.config.Config`:
+            :py:class:`floopcli.config.Config`:
                 configuration object with config attribute
         '''
         config_file = self.config_file
@@ -176,13 +176,13 @@ class Config(object):
         Parse configuration into list of cores
 
         Raises:
-            :py:class:`floop.config.UnmetHostDependencyException`:
+            :py:class:`floopcli.config.UnmetHostDependencyException`:
                 rsync and/or docker-machine binary path does not exist
-            :py:class:`floop.config.MalformedConfigException`:
-                configuration is missing keys expected by :py:class:`floop.iot.core.Core`
+            :py:class:`floopcli.config.MalformedConfigException`:
+                configuration is missing keys expected by :py:class:`floopcli.iot.core.Core`
 
         Returns:
-            [:py:class:`floop.iot.core.Core`]:
+            [:py:class:`floopcli.iot.core.Core`]:
                 list of cores defined in config
         '''
         # only handle dependency checking

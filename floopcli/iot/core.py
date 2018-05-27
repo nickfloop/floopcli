@@ -6,7 +6,7 @@ import signal
 
 from subprocess import check_output
 from os.path import isfile, isdir, expanduser
-from floop.util.syscall import syscall, SystemCallException
+from floopcli.util.syscall import syscall, SystemCallException
 
 logger = logging.getLogger(__name__)
 
@@ -210,9 +210,9 @@ class Core(object):
             value (str):
                 path of SSH private key for core
         Raises:
-            :py:class:`floop.core.core.SSHKeyNotFound`:
+            :py:class:`floopcli.iot.core.SSHKeyNotFound`:
                 SSH private key file does not exist
-            :py:class:`floop.core.core.CannotSetImmutableAttribute`:
+            :py:class:`floopcli.iot.core.CannotSetImmutableAttribute`:
                 attempting to modify the host_key attribute after initialization will fail
         '''
         value = expanduser(value)
@@ -267,7 +267,7 @@ class Core(object):
             value (str):
                 core of SSH user for core
         Raises:
-            :py:class:`floop.core.core.CannotSetImmutableAttribute`:
+            :py:class:`floopcli.core.iot.CannotSetImmutableAttribute`:
                 attempting to modify the user attribute after initialization will fail
         '''
 
@@ -292,7 +292,7 @@ class Core(object):
             str:
                 stdout output of SSH command
         Raises:
-            :py:class:`floop.util.syscall.SystemCallException`:
+            :py:class:`floopcli.util.syscall.SystemCallException`:
                 SSH command exit code was non-zero
         '''
         sys_string = '{} ssh {} {}'.format(
@@ -308,7 +308,7 @@ def __log(core: Core, level: str, message: str) -> None:
     log output
 
     Args:
-        core (:py:class:`floop.core.core.Core`):
+        core (:py:class:`floopcli.core.iot.Core`):
             initialized target core object
         level (str):
             logger logging level (only use 'info' or 'error')
@@ -331,7 +331,7 @@ def create(core: Core, check: bool=True, timeout: int=120) -> None:
     Parallelizable; create new docker-machine on target core
 
     Args:
-        core (:py:class:`floop.core.core.Core`):
+        core (:py:class:`floopcli.core.iot.Core`):
             initialized target core object
         check (bool):
             if True, check core creation succeeded by running
@@ -340,7 +340,7 @@ def create(core: Core, check: bool=True, timeout: int=120) -> None:
             time in seconds to wait for success before throwing error
             (docker-machine create timeout is too long)
     Raises:
-        :py:class:`floop.core.core.CoreCreateException`:
+        :py:class:`floopcli.core.iot.CoreCreateException`:
             core creation failed during docker-machine create or
             'pwd' check failed
     '''
@@ -372,18 +372,16 @@ def push(core: Core, check: bool=True) -> None:
     '''
     Parallelizable; push files from host to target core 
 
+    Ignores floop.log and floop.json
+
     Args:
-        core (:py:class:`floop.core.core.Core`):
+        core (:py:class:`floopcli.core.iot.Core`):
             initialized target core object
-        core.target_source (str):
-            full path host source code directory on host
-        core.target_source (str):
-            full path of source code directory on target core
         check (bool):
             if True, check core creation succeeded by running
             'pwd' via docker-machine SSH on newly created core
     Raises:
-        :py:class:`floop.core.core.CoreCreateException`:
+        :py:class:`floopcli.core.iot.CoreCreateException`:
             core creation failed during docker-machine create or
             'pwd' check failed
     '''
@@ -398,7 +396,7 @@ def push(core: Core, check: bool=True) -> None:
         __log(core, 'info', mkdir_string)
         out = core.run_ssh_command(mkdir_string, check=True)
         __log(core, 'info', out)
-        sync_string = "rsync -avz -e '{} ssh' {} {}:'{}' --delete".format(core.host_docker_machine_bin, core.host_source,
+        sync_string = "rsync -avhz -e '{} ssh' {} {}:'{}' --exclude=floop.log --exclude=floop.json --delete".format(core.host_docker_machine_bin, core.host_source,
             core.core, core.target_source)
         __log(core, 'info', sync_string)
         out, err = syscall(sync_string, check=check)
@@ -412,16 +410,16 @@ def build(core: Core, check: bool=True) -> None:
     Parallelizable; push then build files from host on target core 
 
     Args:
-        core (:py:class:`floop.core.core.Core`):
+        core (:py:class:`floopcli.core.iot.Core`):
             initialized target core object
             
         check (bool):
             if True, check core creation succeeded by running
             'pwd' via docker-machine SSH on newly created core
     Raises:
-        :py:class:`CoreBuildFileNotFound`:
+        :py:class:`floopcli.iot.core.CoreBuildFileNotFound`:
             no Dockerfile in source code directory on host
-        :py:class:`floop.core.core.CoreBuildException`:
+        :py:class:`floopcli.iot.core.CoreBuildException`:
             build commands returned non-zero exit code
     '''
 
@@ -445,15 +443,15 @@ def run(core: Core,
     Parallelizable; push, build, then run files from host on target core 
 
     Args:
-        core (:py:class:`floop.core.core.Core`):
+        core (:py:class:`floopcli.iot.core.Core`):
             initialized target core object
         check (bool):
             if True, check core creation succeeded by running
             'pwd' via docker-machine SSH on newly created core
     Raises:
-        :py:class:`CoreCommunicationException`:
+        :py:class:`floopcli.iot.core.CoreCommunicationException`:
             could not communicate from host to core to remove runtime container
-        :py:class:`floop.core.core.CoreRunException`:
+        :py:class:`floopcli.iot.core.CoreRunException`:
             run commands returned non-zero exit code
     '''
 
@@ -478,13 +476,13 @@ def ps(core: Core,
     Parallelizable; push, build, then run files from host on target core 
 
     Args:
-        core (:py:class:`floop.core.core.Core`):
+        core (:py:class:`floopcli.core.iot.Core`):
             initialized target core object
         check (bool):
             if True, check core creation succeeded by running
             'pwd' via docker-machine SSH on newly created core
     Raises:
-        :py:class:`floop.core.core.CorePSException`:
+        :py:class:`floopcli.iot.core.CorePSException`:
             ps commands returned non-zero exit code
     '''
 
@@ -506,19 +504,15 @@ def test(core: Core,
     Parallelizable; push, build, then run test files from host on target core 
 
     Args:
-        core (:py:class:`floop.core.core.Core`):
+        core (:py:class:`floopcli.iot.core.Core`):
             initialized target core object
-        core.target_source (str):
-            full path host source code directory on host
-        core.target_source (str):
-            full path of source code directory on target core
         check (bool):
             if True, check core creation succeeded by running
             'pwd' via docker-machine SSH on newly created core
     Raises:
-        :py:class:`CoreTestFileNotFound`:
+        :py:class:`floopcli.iot.core.CoreTestFileNotFound`:
             no Dockerfile.test in source code directory on host
-        :py:class:`floop.core.core.CoreTestException`:
+        :py:class:`floopcli.iot.core.CoreTestException`:
             test commands returned non-zero exit code
     '''
     test_file = '{}/Dockerfile.test'.format(core.host_source)
@@ -548,38 +542,28 @@ def test(core: Core,
 def destroy(core: Core,
         check: bool=True) -> None:
     '''
-    Parallelizable; destroy core by uninstalling docker and rm'ing Docker machine
+    Parallelizable; destroy core by rm'ing Docker machine
 
     Args:
-        core (:py:class:`floop.core.core.Core`):
+        core (:py:class:`floopcli.iot.core.Core`):
             initialized target core object
-        core.target_source (str):
-            full path of source code directory on target core
         check (bool):
             if True, check that core destroy system calls
             return non-zero exit codes
     Raises:
-        :py:class:`floop.core.core.CoreDestroyException`:
+        :py:class:`floopcli.iot.core.CoreDestroyException`:
             destroy commands returned non-zero exit code
     '''
     try:
-        # can call docker-machine ssh commands or syscall commands 
-        # rm_target_source = ('ssh', 'rm -rf {}'.format(core.target_source))
-        # uninstall_docker = ('ssh', 'sudo apt-get purge -y docker-ce || true')
         rm_core = ('sys', '{} rm -f {}'.format(
             core.host_docker_machine_bin, core.core))
         # order matters
         commands = [
-                #rm_target_source,
-                #uninstall_docker,
                 rm_core
                 ]
         for command_ in commands:
             kind, command = command_
             __log(core, 'info', command)
-            #if kind == 'ssh':
-            #    out = core.run_ssh_command(command=command, check=check, verbose=verbose())
-            #    __log(core, 'info', out)
             if kind =='sys':
                 out, err = syscall(command=command, check=check)
                 __log(core, 'info', str((out, err)))

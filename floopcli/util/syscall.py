@@ -22,7 +22,7 @@ def syscall(command: str, check: bool=False, verbose: bool=False) -> Tuple[str, 
             if True, prints command output to stdout
 
     Raises:
-        :py:class:`floop.util.SystemCallException`:
+        :py:class:`floopcli.util.SystemCallException`:
             verbose=True and command exited with non-zero code
 
     Returns:

@@ -1,21 +1,21 @@
-floop.util package
+floopcli.util package
 ==================
 
 Submodules
 ----------
 
-floop.util.log module
+floopcli.util.log module
 ---------------------
 
-.. automodule:: floop.util.log
+.. automodule:: floopcli.util.log
     :members:
     :undoc-members:
     :show-inheritance:
 
-floop.util.syscall module
+floopcli.util.syscall module
 -------------------------
 
-.. automodule:: floop.util.syscall
+.. automodule:: floopcli.util.syscall
     :members:
     :undoc-members:
     :show-inheritance:
@@ -23,7 +23,7 @@ floop.util.syscall module
 Module contents
 ---------------
 
-.. automodule:: floop.util
+.. automodule:: floopcli.util
     :members:
     :undoc-members:
     :show-inheritance:

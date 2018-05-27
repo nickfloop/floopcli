@@ -13,12 +13,12 @@ from socket import gethostname
 from sys import argv, exit, modules, _getframe
 from time import time
 
-from floop.config import Config, \
+from floopcli.config import Config, \
         ConfigFileDoesNotExist, \
         MalformedConfigException, \
         UnmetHostDependencyException, \
         RedundantCoreConfigException
-from floop.iot.core import build, create, destroy, ps, push, run, test, \
+from floopcli.iot.core import build, create, destroy, ps, push, run, test, \
         CoreSourceNotFound, \
         CoreBuildException, \
         CoreCreateException, \
@@ -43,7 +43,7 @@ Supported commands:
     run         Push, build, and run code from host on target(s)
     test        Push, build, and test code from host on target(s)
     ps          Show all running tests and runs on target(s)
-    logs        Show logs
+    logs        Show logs with time stamps
     destroy     Destroy cores, uninstall environment from target(s)  
 '''
 
@@ -73,14 +73,6 @@ class FloopCLI(object):
 
     Parses all CLI commands then calls the appropriate
     class method matching the CLI commands
-
-    Attributes:
-        config (:py:class:`floop.config.Config`):  
-            configuration used during CLI call
-        cores ([:py:class:`floop.iot.core.Core`]):
-            list of cores defined in configuration file 
-        command_index (int):
-            list-wise index of command being passed to floop
     '''
     def __init__(self) -> None:
         parser = argparse.ArgumentParser(description='Floop CLI tool',
@@ -93,16 +85,16 @@ class FloopCLI(object):
             args = parser.parse_args(argv[1:])
             if args.version:
                 try:
-                    version = require('floop-cli')[0].version
+                    version = require('floopcli')[0].version
                     print(version)
                     exit(0)
                 # TODO: test in an environment where floop executable exists
-                # but floop-cli pip package is no longer installed
+                # but floopcli pip package is no longer installed
                 except DistributionNotFound:
-                    exit('''Error| pip package "floop-cli" is not installed\n\n
+                    exit('''Error| pip package "floopcli" is not installed\n\n
 \tOptions to fix this error:\n\
 \t--------------------------\n\
-\tInstall floop via pip: pip install floop
+\tInstall floop via pip3: pip3 install floopcli
 ''')
         parser.add_argument('-c', '--config-file', 
                 help='Specify a non-default configuration file')
@@ -111,6 +103,7 @@ class FloopCLI(object):
         try:
             # the index of the CLI call where the commands start
             self.command_index = 2
+            '''List index of where the CLI commands start'''
             if len(argv) > 3:
                 if argv[1] not in ['-c', '-config-file']:
                     args = parser.parse_args(argv[1:2])
@@ -141,6 +134,7 @@ class FloopCLI(object):
                 floop_config = Config(
                         config_file=config_file).read()
                 self.cores = floop_config.parse()
+                '''Valid cores defined in the config file'''
             # this runs the method matching the CLI argument
             getattr(self, args.command)()
         # all CLI stdout/stderr output should come from here

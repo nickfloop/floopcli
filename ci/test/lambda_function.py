@@ -2,8 +2,8 @@
 import os
 import boto3
 from datetime import datetime
-from config import AWS_CONFIG, LAMBDA_CONFIG
-from termcolor import termcolor, cprint
+from .config import AWS_CONFIG, LAMBDA_CONFIG
+from .termcolor import termcolor, cprint
 from botocore.exceptions import ClientError
 from shutil import make_archive
 from uuid import getnode as get_mac

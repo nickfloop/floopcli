@@ -1,29 +1,29 @@
-floop package
-=============
+floopcli package
+================
 
 Subpackages
 -----------
 
 .. toctree::
 
-    floop.device
-    floop.util
+    floopcli.iot
+    floopcli.util
 
 Submodules
 ----------
 
-floop.cli module
-----------------
+floopcli.cli module
+-------------------
 
-.. automodule:: floop.cli
+.. automodule:: floopcli.cli
     :members:
     :undoc-members:
     :show-inheritance:
 
-floop.config module
--------------------
+floopcli.config module
+----------------------
 
-.. automodule:: floop.config
+.. automodule:: floopcli.config
     :members:
     :undoc-members:
     :show-inheritance:
@@ -32,7 +32,7 @@ floop.config module
 Module contents
 ---------------
 
-.. automodule:: floop
+.. automodule:: floopcli
     :members:
     :undoc-members:
     :show-inheritance:

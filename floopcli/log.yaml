@@ -11,7 +11,7 @@ handlers:
         formatter: simple
         stream: ext://sys.stdout
     floop:
-        class: floop.util.log.Log 
+        class: floopcli.util.log.Log 
         level: INFO
         formatter: simple
         name: floop.log

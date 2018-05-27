@@ -27,31 +27,36 @@ Here we show how to configure a Debian or Ubuntu-like target operating system fo
 
 First, boot your operating system on your target then get access to a terminal on the device either via serial connection or SSH. This will depend on your actual hardware and base operating system image. Here we assume your operating system starts you as the root user.
 
-Once you have access to a terminal, check your kernel version on the target by running:
+Once you have access to a terminal, check your kernel version on the **target** by running:
 ::
 
  uname -r
 
 You should see a version number that looks something like 4.13.0. If this version number is above 3.10, then your operating system should support the proper virtualization.
 
-Next, you should install sudo and an SSH server on the target:
+Next, you should install sudo and an SSH server on the **target**:
 ::
 
   apt-get update && apt-get install -y sudo openssh-server
 
-Next, you should make a new user that floop can use with sudo permissions. We recommend you create a user called floop. You can do this on the target by running:
+Next, you should make a new user that floop can use with sudo permissions. We recommend you create a user called floop. You can do this on the **target** by running:
 ::
 
   adduser floop sudo 
 
-Next, you should give your user permission to run sudo without a password. You can do this by adding a line in **/etc/sudoers** on the target by running:
+Next, create a docker group and add the floop user to group so floop can call Docker;
+::
+
+  groupadd docker && usermod -aG docker floop
+
+Next, you should give your user permission to run sudo without a password. You can do this by adding a line in **/etc/sudoers** on the **target** by running:
 ::
  
   sudo echo "floop  ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
 If you have a base operating system where you do not start as the root user, you may need to prepend *sudo* to some of the commands above and supply a password. 
 
-Next, make sure that your floop user has passwordless SSH access from your host. Do this on the target by running:
+Next, make sure that your floop user has passwordless SSH access from your **host**. Do this on the **target** by running:
 ::
 
   sed -ri 's/^PermitRootLogin\s+.*/PermitRootLogin no/' /etc/ssh/sshd_config && \
@@ -59,14 +64,14 @@ Next, make sure that your floop user has passwordless SSH access from your host.
   sed -ri 's/^#PasswordAuthentication\s+.*/PasswordAuthentication no/' /etc/ssh/sshd_config && \
   sed -ri 's/^#UsePAM\s+.*/UsePAM yes/' /etc/ssh/sshd_config
 
-On your host, if you do not already have an SSH key, then generate a new one by running:
+On your **host**, if you do not already have an SSH key, then generate a new one by running:
 ::
  
   ssh-keygen -t rsa -N "" -f ~/.ssh/id_rsa
 
 Copy and paste the contents of the host file **~/.ssh/id_rsa.pub** to the target file **/home/floop/.ssh/authorized_keys**.
 
-You can test that your sudo and SSH configuration changes succeeded by running the following from the host:
+You can test that your sudo and SSH configuration changes succeeded by running the following from the **host**:
 ::
 
   ssh -i ~/.ssh/id_rsa \
@@ -75,9 +80,9 @@ You can test that your sudo and SSH configuration changes succeeded by running t
 
 You should change *your.device.ip.address* to the IP address of your target device on a network that your host can access.
 
-If you see the line you added above to permit passwordless sudo, then your configuration succeeded.
+If you see the line you added above to permit passwordless sudo, then your sudo configuration succeeded.
 
-If you are working with `Raspbian <https://www.raspbian.org/>`_, then you may need to perform the following additional step. You need to change the distribution ID from *raspbian* to *debian* so docker-machine recognizes that you are running a Debian-based operating system. You can do this by running the following command from your host:
+If you are working with `Raspbian <https://www.raspbian.org/>`_, then you may need to perform the following additional step. You need to change the distribution ID from *raspbian* to *debian* so docker-machine recognizes that you are running a Debian-based operating system. You can do this by running the following command from your **host**:
 ::
   
   ssh -i ~/.ssh/id_rsa \

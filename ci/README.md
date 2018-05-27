@@ -1,1 +1,0 @@
-# floop-cli Integration Tests

@@ -1,4 +1,4 @@
-from lambda_function import Lambda
+from test.lambda_function import Lambda
 
 if __name__ == '__main__':
     Lambda().\

@@ -10,16 +10,16 @@ from os import path
 here = path.abspath(path.dirname(__file__))
 
 # Get the long description from the README file
-with open(path.join(here, 'README.md'), encoding='utf-8') as f:
+with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
 setup(
-    name='floop-cli',
-    version='0.0.1',
+    name='floopcli',
+    version='0.0.1a6',
     description='sensor development and testing tools',
     long_description=long_description,
     long_description_content_type='text/x-rst',
-    url='https://github.com/ForwardLoopLLC/floop-cli',
+    url='https://github.com/ForwardLoopLLC/floopcli',
     author='Forward Loop LLC',
     author_email='nick@forward-loop.com', 
     classifiers=[
@@ -56,11 +56,11 @@ setup(
     # executes the function `main` from this package when invoked:
     entry_points={
         'console_scripts': [
-            'floop=floop.__main__:main',
+            'floop=floopcli.__main__:main'
         ],
     },
     project_urls={
-        'Bug Reports': 'https://github.com/ForwardLoopLLC/floop-cli/issues',
-        'Source': 'https://github.com/ForwardLoopLLC/floop-cli/issues',
+        'Bug Reports': 'https://github.com/ForwardLoopLLC/floopcli/issues',
+        'Source': 'https://github.com/ForwardLoopLLC/floopcli/issues',
     },
 )
