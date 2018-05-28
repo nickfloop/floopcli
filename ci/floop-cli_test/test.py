@@ -146,6 +146,7 @@ sudo apt-get update && sudo apt-get install -y curl git rsync python2.7 python-p
 
 # install mypy using pip3 but then run tests with pip
 sudo pip3 install --upgrade mypy
+sudo pip install typing
 
 # install awscli to use s3 sync
 sudo pip install awscli
@@ -190,7 +191,7 @@ cd docs && make html && mkdir -p s3/floopcli/{branch}/ && \
         cp -r build/html/* s3/floopcli/{branch}/ && cd ..
 
 # check static typing
-mypy --config-file mypy.ini floopcli
+mypy --py2 --config-file mypy.ini floopcli
 
 # install docker-machine
 base=https://github.com/docker/machine/releases/download/v0.14.0 &&\
