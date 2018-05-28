@@ -142,10 +142,10 @@ success () {{
 trap error ERR INT TERM SIGINT SIGTERM SIGHUP
 
 # install system dependencies
-sudo apt-get update && sudo apt-get install -y curl git rsync python2.7 python-pip
+sudo apt-get update && sudo apt-get install -y curl git rsync python2.7 python-pip python3-pip
 
-# install pip
-curl https://bootstrap.pypa.io/get-pip.py | python
+# install mypy using pip3 but then run tests with pip
+sudo pip3 install --upgrade mypy
 
 # install awscli to use s3 sync
 sudo pip install awscli
