@@ -142,19 +142,10 @@ success () {{
 trap error ERR INT TERM SIGINT SIGTERM SIGHUP
 
 # install system dependencies
-sudo apt-get update && sudo apt-get install -y curl git rsync python3-pip
+sudo apt-get update && sudo apt-get install -y curl git rsync
 
-mkdir -p ~/.ssh/
-# the SSH_KEY env variable must contain slash-n newline characters
-echo -e "{sshkey}" > ~/.ssh/id_rsa && chmod 700 ~/.ssh/id_rsa
-cat ~/.ssh/id_rsa
-ssh-keyscan github.com >> ~/.ssh/known_hosts
-GIT_SSH_COMMAND='ssh -i ~/.ssh/id_rsa' \
-        git clone git@github.com:nickfloop/floop-cli-private.git \
-        floopcli
-
-# checkout the commit that was just pushed
-cd floopcli && git checkout {commit}
+# install pip
+curl https://bootstrap.pypa.io/get-pip.py | python
 
 # install awscli to use s3 sync
 sudo pip install awscli
@@ -167,6 +158,7 @@ aws configure set default.region {awsregion}
 # copy the pending build badge to the status URL
 aws s3 cp s3://docs.forward-loop.com/status/build-pending.png s3://docs.forward-loop.com/floopcli/{branch}/status/build-status.png
 
+# copy pending build-status.html to badge link
 echo "<pre>" > build-status.html
 date >> build-status.html
 echo "FOR MORE INFORMATION ABOUT THESE TESTS, VISIT THE ci/ FOLDER IN THIS BRANCH OF THE FLOOP REPO" >> build-status.html
@@ -176,6 +168,19 @@ echo "Build Pending" >> build-status.html
 echo "</pre>" >> build-status.html
 # push raw html to s3
 aws s3 cp build-status.html s3://docs.forward-loop.com/floopcli/{branch}/status/build-status.html --cache-control max-age=0,no-cache --metadata-directive REPLACE
+
+# clone floopcli repo
+mkdir -p ~/.ssh/
+# the SSH_KEY env variable must contain slash-n newline characters
+echo -e "{sshkey}" > ~/.ssh/id_rsa && chmod 700 ~/.ssh/id_rsa
+cat ~/.ssh/id_rsa
+ssh-keyscan github.com >> ~/.ssh/known_hosts
+GIT_SSH_COMMAND='ssh -i ~/.ssh/id_rsa' \
+        git clone git@github.com:nickfloop/floop-cli-private.git \
+        floopcli
+
+# checkout the commit that was just pushed
+cd floopcli && git checkout {commit}
 
 # local install floopcli and tests
 sudo pip install -e .[test]

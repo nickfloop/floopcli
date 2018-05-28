@@ -23,15 +23,15 @@ Learn more about Forward Loop at our `company website <http://forward-loop.com>`
 
 Installation
 ------------
-For testing purposes, you can download the latest official release as a pip package:
+You can download the latest official release as a pip package:
 ::
 
     pip install --upgrade floopcli
 
-For development purposes, you can pull this repository and install it locally with pip:
+For developing floopcli itself, you can pull this repository and install it locally with pip:
 ::
 
-    git clone git@github.com:ForwardLoopLLC/floopcli.git && cd floopcli && pip install -e . 
+    git clone git@github.com:ForwardLoopLLC/floopcli.git && cd floopcli && pip install -e .[test] 
 
 Testing
 -------
