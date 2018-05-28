@@ -1,8 +1,8 @@
 floop
 =====
 
-.. image:: http://docs.forward-loop.com/floopcli/ec2/status/run-status.png
-   :target: http://docs.forward-loop.com/floopcli/ec2/status/build.html
+.. image:: http://docs.forward-loop.com/floopcli/ec2/status/build-status.png
+   :target: http://docs.forward-loop.com/floopcli/ec2/status/build-status.html
 
 Note: this repository is in the alpha development stage. We recommend you always pull or upgrade to the latest version. 
 
@@ -23,15 +23,15 @@ Learn more about Forward Loop at our `company website <http://forward-loop.com>`
 
 Installation
 ------------
-For testing purposes, you can download the latest official release as a pip3 package:
+For testing purposes, you can download the latest official release as a pip package:
 ::
 
-    pip3 install floopcli
+    pip install --upgrade floopcli
 
-For development purposes, you can pull this repository and install it locally with pip3:
+For development purposes, you can pull this repository and install it locally with pip:
 ::
 
-    git clone git@github.com:ForwardLoopLLC/floopcli.git && cd floopcli && pip3 install -e . 
+    git clone git@github.com:ForwardLoopLLC/floopcli.git && cd floopcli && pip install -e . 
 
 Testing
 -------
