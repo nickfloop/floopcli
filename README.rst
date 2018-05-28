@@ -28,10 +28,12 @@ You can download the latest official release as a pip package:
 
     pip install --upgrade floopcli
 
-For developing floopcli itself, you can pull this repository and install it locally with pip:
+For developing floopcli itself, you can pull this repository and install it locally with pip3:
 ::
 
-    git clone git@github.com:ForwardLoopLLC/floopcli.git && cd floopcli && pip install -e .[test] 
+    git clone git@github.com:ForwardLoopLLC/floopcli.git && cd floopcli && pip3 install -e .[test] 
+
+We highly recommend you use `virtualenv <https://virtualenv.pypa.io/en/stable/>`_ when working with floopcli.
 
 Testing
 -------
