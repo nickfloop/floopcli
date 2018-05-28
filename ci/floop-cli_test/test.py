@@ -106,13 +106,15 @@ log () {{
     # just returns an empty log if it doesn't make it to pytest
     touch /var/log/user-data.log
     # pipe test results into raw html
-    echo "<pre>" > build.html
-    date >> build.html
-    echo "FOR MORE INFORMATION ABOUT THESE TESTS, VISIT THE ci/ FOLDER IN THIS BRANCH OF THE FLOOP REPO" >> build.html
-    cat /var/log/user-data.log >> build.html
-    echo "</pre>" >> build.html
+    echo "<pre>" > build-status.html
+    date >> build-status.html
+    echo "FOR MORE INFORMATION ABOUT THESE TESTS, VISIT THE ci/ FOLDER IN THIS BRANCH OF THE FLOOP REPO" >> build-status.html
+    echo "Branch: {branch}" >> build-status.html
+    echo "Commit: {commit}" >> build-status.html
+    cat /var/log/user-data.log >> build-status.html
+    echo "</pre>" >> build-status.html
     # push raw html to s3
-    aws s3 cp build.html s3://docs.forward-loop.com/floopcli/{branch}/status/build.html --cache-control max-age=0,no-cache
+    aws s3 cp build-status.html s3://docs.forward-loop.com/floopcli/{branch}/status/build-status.html --cache-control max-age=0,no-cache --metadata-directive REPLACE
 }}
 
 # clean up function to run at the end of testing
@@ -125,13 +127,13 @@ cleanup () {{
 
 error () {{
     # copy the failing build badge to the status URL
-    aws s3 cp s3://docs.forward-loop.com/status/build-failing.png s3://docs.forward-loop.com/floopcli/{branch}/status/run-status.png || true
+    aws s3 cp s3://docs.forward-loop.com/status/build-failing.png s3://docs.forward-loop.com/floopcli/{branch}/status/build-status.png || true
     cleanup
 }}
 
 success () {{
     # copy the passing build badge to the status URL
-    aws s3 cp s3://docs.forward-loop.com/status/build-passing.png s3://docs.forward-loop.com/floopcli/{branch}/status/run-status.png || true
+    aws s3 cp s3://docs.forward-loop.com/status/build-passing.png s3://docs.forward-loop.com/floopcli/{branch}/status/build-status.png || true
     cleanup
 }}
 
@@ -155,7 +157,7 @@ GIT_SSH_COMMAND='ssh -i ~/.ssh/id_rsa' \
 cd floopcli && git checkout {commit}
 
 # install awscli to use s3 sync
-sudo pip3 install awscli
+sudo pip install awscli
 
 # configure aws with env variables
 aws configure set aws_access_key_id {awskey} 
@@ -163,18 +165,20 @@ aws configure set aws_secret_access_key {awssecret}
 aws configure set default.region {awsregion} 
 
 # copy the pending build badge to the status URL
-aws s3 cp s3://docs.forward-loop.com/status/build-pending.png s3://docs.forward-loop.com/floopcli/{branch}/status/run-status.png
+aws s3 cp s3://docs.forward-loop.com/status/build-pending.png s3://docs.forward-loop.com/floopcli/{branch}/status/build-status.png
 
-echo "<pre>" > build.html
-date >> build.html
-echo "FOR MORE INFORMATION ABOUT THESE TESTS, VISIT THE ci/ FOLDER IN THIS BRANCH OF THE FLOOP REPO" >> build.html
-echo "Build Pending" >> build.html
-echo "</pre>" >> build.html
+echo "<pre>" > build-status.html
+date >> build-status.html
+echo "FOR MORE INFORMATION ABOUT THESE TESTS, VISIT THE ci/ FOLDER IN THIS BRANCH OF THE FLOOP REPO" >> build-status.html
+echo "Branch: {branch}" >> build-status.html
+echo "Commit: {commit}" >> build-status.html
+echo "Build Pending" >> build-status.html
+echo "</pre>" >> build-status.html
 # push raw html to s3
-aws s3 cp build.html s3://docs.forward-loop.com/floopcli/{branch}/status/build.html --cache-control max-age=0,no-cache
+aws s3 cp build-status.html s3://docs.forward-loop.com/floopcli/{branch}/status/build-status.html --cache-control max-age=0,no-cache --metadata-directive REPLACE
 
-# local install floopcli
-sudo pip3 install -e .
+# local install floopcli and tests
+sudo pip install -e .[test]
 
 # build the docs and move to a named folder for s3
 cd docs && make html && mkdir -p s3/floopcli/{branch}/ && \

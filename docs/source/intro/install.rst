@@ -31,9 +31,9 @@ Install `rsync <https://git.samba.org/rsync.git>`_
 
 Install floop
 =============
-floop can be installed via `pip3 <https://pip.pypa.io/en/stable/installing/>`_, where it is known as `floopcli <https://pypi.org/project/floopcli>`_:
+floop can be installed via `pip <https://pip.pypa.io/en/stable/installing/>`_, where it is known as `floopcli <https://pypi.org/project/floopcli>`_:
 ::    
-    pip3 install floop-cli
+    pip install floop-cli
 
 This will install a floop executable binary on your host system.
 

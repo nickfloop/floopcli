@@ -7,6 +7,23 @@ here = path.abspath(path.dirname(__file__))
 with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
+install_requires = [
+            'argparse>=1.4.0',
+            'mypy>=0.590',
+            'pyyaml>=3.12',
+            ]
+
+tests_require = [
+            'pytest>=3.5.1',
+            'pytest-cov>=2.5.1',
+            'sphinx>=1.7.4',
+            'sphinx-tabs>=1.1.7'
+            ]
+
+extras = {
+    'test': tests_require,
+}
+
 setup(
     name='floopcli',
     version='0.0.1a7',
@@ -26,15 +43,9 @@ setup(
     ],
     keywords='sensor development devops',
     packages=find_packages(exclude=['contrib', 'docs', 'tests']),
-    install_requires=[
-            'argparse==1.4.0',
-            'mypy==0.590',
-            'pytest==3.5.1',
-            'pytest-cov==2.5.1',
-            'pyyaml==3.12',
-            'sphinx==1.7.4',
-            'sphinx-tabs==1.1.7'
-            ],  
+    install_requires=install_requires,
+    tests_require=tests_require,
+    extras_require=extras,
     entry_points={
         'console_scripts': [
             'floop=floopcli.__main__:main'

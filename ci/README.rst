@@ -10,6 +10,7 @@ floop needs access to virtual hardware in order to test network creation, networ
 How It Works
 ------------
 The CI environment works as follows:
+
 - Developer uses *git push* to push code a development branch
 - Github webhook calls an AWS Lambda function to begin testing
 - The AWS Lambda function does the following:
