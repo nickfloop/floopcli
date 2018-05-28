@@ -112,7 +112,7 @@ log () {{
     cat /var/log/user-data.log >> build.html
     echo "</pre>" >> build.html
     # push raw html to s3
-    aws s3 cp build.html s3://docs.forward-loop.com/floopcli/{branch}/status/build.html
+    aws s3 cp build.html s3://docs.forward-loop.com/floopcli/{branch}/status/build.html --cache-control max-age=0,no-cache
 }}
 
 # clean up function to run at the end of testing
@@ -164,6 +164,14 @@ aws configure set default.region {awsregion}
 
 # copy the pending build badge to the status URL
 aws s3 cp s3://docs.forward-loop.com/status/build-pending.png s3://docs.forward-loop.com/floopcli/{branch}/status/run-status.png
+
+echo "<pre>" > build.html
+date >> build.html
+echo "FOR MORE INFORMATION ABOUT THESE TESTS, VISIT THE ci/ FOLDER IN THIS BRANCH OF THE FLOOP REPO" >> build.html
+echo "Build Pending" >> build.html
+echo "</pre>" >> build.html
+# push raw html to s3
+aws s3 cp build.html s3://docs.forward-loop.com/floopcli/{branch}/status/build.html --cache-control max-age=0,no-cache
 
 # local install floopcli
 sudo pip3 install -e .
