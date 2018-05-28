@@ -6,7 +6,7 @@ Installation Guide
 
 Overview
 ========
-floop is a command-line interface built in Python 3. The tool uses Docker, Docker Machine, and rsync to manage all host-target communication.
+floop is a command-line interface built in Python. The tool uses Docker, Docker Machine, and rsync to manage all host-target communication.
 
 Supported Operating Systems
 ===========================
@@ -33,7 +33,7 @@ Install floop
 =============
 floop can be installed via `pip <https://pip.pypa.io/en/stable/installing/>`_, where it is known as `floopcli <https://pypi.org/project/floopcli>`_:
 ::    
-    pip install floop-cli
+    pip install floopcli
 
 This will install a floop executable binary on your host system.
 

@@ -142,7 +142,7 @@ success () {{
 trap error ERR INT TERM SIGINT SIGTERM SIGHUP
 
 # install system dependencies
-sudo apt-get update && sudo apt-get install -y curl git rsync
+sudo apt-get update && sudo apt-get install -y curl git rsync python2.7 python-pip
 
 # install pip
 curl https://bootstrap.pypa.io/get-pip.py | python
