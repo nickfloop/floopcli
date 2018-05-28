@@ -13,6 +13,7 @@ install_requires = [
             ]
 
 tests_require = [
+            'mypy>=0.0.590',
             'pytest>=3.5.1',
             'pytest-cov>=2.5.1',
             'sphinx>=1.7.4',
