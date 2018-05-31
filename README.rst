@@ -50,3 +50,8 @@ Contributing
 floop is an open-source project from Forward Loop LLC. We encourage
 community engagement. If you find any bugs or want to propose new
 features, please raise an issue in this repository.
+
+IRC Channel
+-------------
+
+Feel free to reach out on - #floop at Freenode.
